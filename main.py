@@ -10,11 +10,14 @@ import random
 import utils
 
 # colors for the bboxes
-COLORS = ['red', 'blue','green', 'coral', 'cyan', 'deeppink', 'teal', 'violet', 'yellowgreen', 'gold']
+COLORS = ['cyan', 'blue', 'red', 'orange', 'limegreen', 'hotpink', 'green', 'fuchsia',  'olive', 'darkviolet']
 # image sizes for the examples
 SIZE = 256, 256
+# panel size for init
+PSIZE = 400
 # label.json
 LABEL_JSON = 'label.json'
+
 
 class LabelTool():
     def __init__(self, master):
@@ -27,7 +30,7 @@ class LabelTool():
 
         # initialize global state
         self.imageDir = ''
-        self.imageList= []
+        self.imageList = []
         self.outDir = ''
         self.cur = 0
         self.total = 0
@@ -53,10 +56,11 @@ class LabelTool():
 
         # ----------------- GUI stuff ---------------------
         # dir entry & load
+        # [UPPER PART]
         # input image dir button
-        self.srcDirBtn = Button(self.frame, text = "Image input folder", command = self.selectSrcDir, width = 20)
+        self.srcDirBtn = Button(self.frame, text = "Image Folder", command = self.selectSrcDir, width = 15)
         self.srcDirBtn.grid(row = 0, column = 0)
-        
+
         # input image dir entry
         self.svSourcePath = StringVar()
         self.entrySrc = Entry(self.frame, textvariable = self.svSourcePath)
@@ -68,7 +72,7 @@ class LabelTool():
         self.ldBtn.grid(row = 0, column = 2, rowspan = 2, columnspan = 2, padx = 2, pady = 2, ipadx = 5, ipady = 5)
 
         # label file save dir button
-        self.desDirBtn = Button(self.frame, text = "Label output folder", command = self.selectDesDir, width = 20)
+        self.desDirBtn = Button(self.frame, text = "Label Folder", command = self.selectDesDir, width = 15)
         self.desDirBtn.grid(row = 1, column = 0)
 
         # label file save dir entry
@@ -77,26 +81,17 @@ class LabelTool():
         self.entryDes.grid(row = 1, column = 1, sticky = W+E)
         self.svDestinationPath.set(os.path.join(os.getcwd(),"Labels"))
 
-        # radio button for photo color
-        self.colorBtn = Radiobutton(self.frame, text='Color', value=True, command=self.selectColor)
-        self.colorBtn.grid(row = 2, column = 0, sticky = W)
-        self.blwhBtn = Radiobutton(self.frame, text='Black & White', value=False, command=self.selectColor)
-        self.blwhBtn.grid(row = 3, column = 0, sticky = W)
-
-        # choose class
+        # [LEFT PART]
+        # radio button for class
+        self.classLb = Label(self.frame, text = 'Class:')
+        self.classLb.grid(row = 2, column = 0, padx = 5, sticky = W)
         self.classname = StringVar()
-        self.classcandidate = ttk.Combobox(self.frame, state = 'readonly', textvariable = self.classname, font="Verdana 12")
-        self.classcandidate.grid(row = 4, column = 0, sticky = W)
-        if os.path.exists(self.classcandidate_filename):
-            with open(self.classcandidate_filename) as cf:
-                for line in cf.readlines():
-                    self.cla_can_temp.append(line.strip('\n'))
-        self.classcandidate['values'] = self.cla_can_temp
-        self.classcandidate.current(0)
-        self.currentLabelclass = self.classcandidate.get()
-        self.btnclass = Button(self.frame, text = 'Confirm Class', command = self.setClass, height = 4)
-        self.btnclass.grid(row = 5, column = 0, sticky = W)
+        self.childBtn = Radiobutton(self.frame, text='Child', variable=self.classname, value='child', anchor = 'w', command = self.setClass)
+        self.childBtn.grid(row = 3, column = 0, sticky = W+E)
+        self.AdultmBtn = Radiobutton(self.frame, text='Adult', variable=self.classname, value='adult', anchor = 'w', command = self.setClass)
+        self.AdultmBtn.grid(row = 4, column = 0, sticky = W+N)
 
+        # [CENTRE PART]
         # main panel for labeling
         self.mainPanel = Canvas(self.frame, cursor = 'tcross')
         self.mainPanel.bind("<Button-1>", self.mouseClick)
@@ -105,22 +100,57 @@ class LabelTool():
         self.parent.bind("s", self.cancelBBox)
         self.parent.bind("p", self.prevImage) # press 'p' to go backforward
         self.parent.bind("n", self.nextImage) # press 'n' to go forward
-        self.mainPanel.grid(row = 2, column = 2, rowspan = 4, sticky = W+N)
+        self.mainPanel.grid(row = 2, column = 1, rowspan = 4, sticky = W+N)
 
-
+        # [RIGHT PART]
         # showing bbox info & delete bbox
         self.lb1 = Label(self.frame, text = 'Bounding boxes:')
-        self.lb1.grid(row = 6, column = 0,  sticky = W+N)
-        self.btnDel = Button(self.frame, text = 'Delete', command = self.delBBox)
-        self.btnDel.grid(row = 7, column = 0, sticky = W+E+N)
-        self.btnClear = Button(self.frame, text = 'ClearAll', command = self.clearBBox)
-        self.btnClear.grid(row = 8, column = 0, sticky = W+E+S)
-        self.listbox = Listbox(self.frame, width = 22, height = 12)
-        self.listbox.grid(row = 9, column = 0, sticky = N+S)
+        self.lb1.grid(row = 2, column = 2,  sticky = W+N)
+        self.btnDel = Button(self.frame, text = 'Delete', width = 20, command = self.delBBox)
+        self.btnDel.grid(row = 3, column = 2, sticky = W+N)
+        self.btnClear = Button(self.frame, text = 'ClearAll', width = 20, command = self.clearBBox)
+        self.btnClear.grid(row = 4, column = 2, sticky = W+N)
+        self.listbox = Listbox(self.frame, width = 25, height = 15)
+        self.listbox.grid(row = 5, column = 2, sticky = N+S)
+
+        # radio button for age / face direction
+        self.ages = StringVar()
+        self.ageLb = Label(self.frame, text = 'Age:')
+        self.ageLb.grid(row = 6, column = 2, sticky = W+N)
+        self.age6mBtn = Radiobutton(self.frame, text='0-6 month', variable=self.ages, value='0', command = self.setAge)
+        self.age6mBtn.grid(row = 7, column = 2, sticky = W+N)
+        self.age12mBtn = Radiobutton(self.frame, text='7-12 month', variable=self.ages, value='1', command = self.setAge)
+        self.age12mBtn.grid(row = 8, column = 2, sticky = W+N)
+        self.age6yrBtn = Radiobutton(self.frame, text='12m-6 years', variable=self.ages, value='2', command = self.setAge)
+        self.age6yrBtn.grid(row = 9, column = 2, sticky = W+N)
+        self.age6upBtn = Radiobutton(self.frame, text='6 years up', variable=self.ages, value='3', command = self.setAge)
+        self.age6upBtn.grid(row = 10, column = 2, sticky = W+N)
+
+        self.fcLb = Label(self.frame, text = 'Face Direction:')
+        self.fcLb.grid(row = 11, column = 2, sticky = W+N)
+        self.facedir = StringVar()
+        self.fcfrontBtn = Radiobutton(self.frame, text='Front', variable=self.facedir, value='front', command = self.setFace)
+        self.fcfrontBtn.grid(row = 12, column = 2, sticky = W+N)
+        self.fcsideBtn = Radiobutton(self.frame, text='Side', variable=self.facedir, value='side', command = self.setFace)
+        self.fcsideBtn.grid(row = 13, column = 2, sticky = W+N)
+        self.fcbackBtn = Radiobutton(self.frame, text='Back', variable=self.facedir, value='back', command = self.setFace)
+        self.fcbackBtn.grid(row = 14, column = 2, sticky = W+N)
+
+        self.covered = StringVar()
+        self.coveredBtn = Checkbutton(self.frame, text='In blanket', variable=self.covered, onvalue=0, offvalue=1, command = self.setCovered)
+        self.coveredBtn.grid(row = 15, column = 2, sticky = W+N)
+
+        self.confirmBtn = Button(self.frame, text = 'Confirm Class', command = self.confirmed, height = 4)
+        self.confirmBtn.grid(row = 16, column = 2, sticky = W+N)
+        self.finalOne = Label(self.frame, bg='tomato', width=20, text='')
+        self.finalOne.grid(row = 17, column = 2, sticky = W+N)
+        self.finalTwo = Label(self.frame, bg='tomato', width=20, text='')
+        self.finalTwo.grid(row = 18, column = 2, sticky = W+N)
+
 
         # control panel for image navigation
         self.ctrPanel = Frame(self.frame)
-        self.ctrPanel.grid(row = 10, column = 1, columnspan = 2, sticky = W+E)
+        self.ctrPanel.grid(row = 19, column = 1, columnspan = 2, sticky = W+E)
         self.prevBtn = Button(self.ctrPanel, text='<< Prev', width = 10, command = self.prevImage)
         self.prevBtn.pack(side = LEFT, padx = 5, pady = 3)
         self.nextBtn = Button(self.ctrPanel, text='Next >>', width = 10, command = self.nextImage)
@@ -151,9 +181,40 @@ class LabelTool():
         self.svDestinationPath.set(path)
         return
 
-    def selectColor(self):
-        print('color', value)
+    def setAge(self):
+        print('age:', self.ages.get())
         return
+
+    def setFace(self):
+        print('face direction:', self.facedir.get())
+
+    def setCovered(self):
+        print('covered:', self.covered.get())
+        return
+
+    def setClass(self):
+        self.currentLabelclass = self.classname.get()
+        print('set label class to : %s' % self.currentLabelclass)
+
+    def confirmed(self):
+        textClass = self.classname.get()
+        textAge = self.ages.get()
+        if textAge == '0':
+            textAge = '0-6 month'
+        elif textAge == '1':
+            textAge = '7-12 month'
+        elif textAge == '2':
+            textAge = '1-6 years old'
+        else:
+            textAge = '6 years up'
+        textFace = self.facedir.get()
+        textCovered = self.covered.get()
+        if textCovered == '0':
+            textCovered = 'No blanket'
+        else:
+            textCovered = 'In blanket'
+        self.finalOne.config(text=textClass + '/' + textAge)
+        self.finalTwo.config(text=textFace + '/' + textCovered)
 
     def loadDir(self):
         self.parent.focus()
@@ -183,28 +244,29 @@ class LabelTool():
             os.mkdir(self.outDir)
 
         # load csv file, compare images file list with csv
-        undone_list = self.imageList
+        undoneList = self.imageList
         if os.path.exists(self.outDir + "/" + LABEL_JSON):
             labeled_list = utils.get_image_key(self.outDir + "/" + LABEL_JSON)
-            for (i, a) in enumerate(labeled_list):
-                for (j, n) in enumerate(undone_list):
+            for (i, a) in enumerate(undoneList):
+                for (j, n) in enumerate(undoneList):
                     name = n.split('/')[-1]
                     if a == name:
-                        undone_list.remove(n)
+                        undoneList.remove(n)
 
-        self.loadImage(undone_list)
+        self.imageList = undoneList
+        self.loadImage()
         print('%d images loaded from %s' %(self.total, self.imageDir))
 
-    def loadImage(self, imageList):
+    def loadImage(self):
         # load image
-        imagepath = imageList[self.cur - 1]
-        print(imagepath, imageList)
+        imagepath = self.imageList[self.cur - 1]
+        print(imagepath, self.imageList)
         self.img = Image.open(imagepath)
         size = self.img.size
         self.factor = max(size[0]/1000, size[1]/1000., 1.)
         self.img = self.img.resize((int(size[0]/self.factor), int(size[1]/self.factor)))
         self.tkimg = ImageTk.PhotoImage(self.img)
-        self.mainPanel.config(width = max(self.tkimg.width(), 400), height = max(self.tkimg.height(), 400))
+        self.mainPanel.config(width = max(self.tkimg.width(), PSIZE), height = max(self.tkimg.height(), PSIZE))
         self.mainPanel.create_image(0, 0, image = self.tkimg, anchor=NW)
         self.progLabel.config(text = "%04d/%04d" %(self.cur, self.total))
 
@@ -327,10 +389,6 @@ class LabelTool():
             self.saveImage()
             self.cur = idx
             self.loadImage()
-
-    def setClass(self):
-        self.currentLabelclass = self.classcandidate.get()
-        print('set label class to : %s' % self.currentLabelclass)
 
 
 
