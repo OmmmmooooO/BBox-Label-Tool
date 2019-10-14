@@ -55,114 +55,128 @@ class LabelTool():
         self.vl = None
 
         # ----------------- GUI stuff ---------------------
-        # dir entry & load
         # [UPPER PART]
-        # input image dir button
-        self.srcDirBtn = Button(self.frame, text = "Image Folder", command = self.selectSrcDir, width = 15)
+        ## button: Image Folder
+        self.srcDirBtn = Button(self.frame, text = "Image Folder", command = self.selectSrcDir, width = 10)
         self.srcDirBtn.grid(row = 0, column = 0)
 
-        # input image dir entry
+        ## entry: input image dir
         self.svSourcePath = StringVar()
         self.entrySrc = Entry(self.frame, textvariable = self.svSourcePath)
-        self.entrySrc.grid(row = 0, column = 1, sticky = W+E)
+        self.entrySrc.grid(row = 0, column = 1, columnspan=4, sticky = W+E)
         self.svSourcePath.set(os.getcwd())
 
-        # load button
-        self.ldBtn = Button(self.frame, text = "Load Dir", command = self.loadDir)
-        self.ldBtn.grid(row = 0, column = 2, rowspan = 2, columnspan = 2, padx = 2, pady = 2, ipadx = 5, ipady = 5)
-
-        # label file save dir button
-        self.desDirBtn = Button(self.frame, text = "Label Folder", command = self.selectDesDir, width = 15)
+        ## button: Label Folder
+        self.desDirBtn = Button(self.frame, text = "Label Folder", command = self.selectDesDir, width = 10)
         self.desDirBtn.grid(row = 1, column = 0)
 
-        # label file save dir entry
+        ## entry: output label dir
         self.svDestinationPath = StringVar()
         self.entryDes = Entry(self.frame, textvariable = self.svDestinationPath)
-        self.entryDes.grid(row = 1, column = 1, sticky = W+E)
+        self.entryDes.grid(row = 1, column = 1, columnspan=4, sticky = W+E)
         self.svDestinationPath.set(os.path.join(os.getcwd(),"Labels"))
 
-        # [LEFT PART]
-        # radio button for class
-        self.classLb = Label(self.frame, text = 'Class:')
-        self.classLb.grid(row = 2, column = 0, padx = 5, sticky = W)
-        self.classname = StringVar()
-        self.childBtn = Radiobutton(self.frame, text='Child', variable=self.classname, value='child', anchor = 'w', command = self.setClass)
-        self.childBtn.grid(row = 3, column = 0, sticky = W+E)
-        self.AdultmBtn = Radiobutton(self.frame, text='Adult', variable=self.classname, value='adult', anchor = 'w', command = self.setClass)
-        self.AdultmBtn.grid(row = 4, column = 0, sticky = W+N)
+        ## button: Load Dir
+        self.ldBtn = Button(self.frame, text = "Load Dir", command = self.loadDir)
+        self.ldBtn.grid(row = 0, column = 5, rowspan = 2, columnspan = 2, padx = 2, pady = 2, ipadx = 5, ipady = 5)
 
         # [CENTRE PART]
-        # main panel for labeling
+        ## main panel for labeling
         self.mainPanel = Canvas(self.frame, cursor = 'tcross')
         self.mainPanel.bind("<Button-1>", self.mouseClick)
         self.mainPanel.bind("<Motion>", self.mouseMove)
         self.parent.bind("<Escape>", self.cancelBBox)  # press <Espace> to cancel current bbox
         self.parent.bind("s", self.cancelBBox)
         self.parent.bind("p", self.prevImage) # press 'p' to go backforward
-        self.parent.bind("n", self.nextImage) # press 'n' to go forward
-        self.mainPanel.grid(row = 2, column = 1, rowspan = 4, sticky = W+N)
+        self.parent.bind("n", self.nextImage) # press 'n' to go forward 
+        self.mainPanel.grid(row = 2, column = 1, rowspan = 4, columnspan = 4,sticky = W+E+N+S)
 
-        # [RIGHT PART]
-        # showing bbox info & delete bbox
-        self.lb1 = Label(self.frame, text = 'Bounding boxes:')
-        self.lb1.grid(row = 2, column = 2,  sticky = W+N)
-        self.btnDel = Button(self.frame, text = 'Delete', width = 20, command = self.delBBox)
-        self.btnDel.grid(row = 3, column = 2, sticky = W+N)
-        self.btnClear = Button(self.frame, text = 'ClearAll', width = 20, command = self.clearBBox)
-        self.btnClear.grid(row = 4, column = 2, sticky = W+N)
-        self.listbox = Listbox(self.frame, width = 25, height = 15)
-        self.listbox.grid(row = 5, column = 2, sticky = N+S)
+        ## radio button: Class
+        self.classLb = Label(self.frame, text = 'Class:')
+        self.classLb.grid(row = 6, column = 1, padx = (0,60), sticky = N+E)
+        self.classname = StringVar()
+        self.classname.set('child') # init
+        self.childBtn = Radiobutton(self.frame, text='Child', variable=self.classname, value='child', command = self.setClass)
+        self.childBtn.grid(row = 7, column = 1, padx = (0,50), sticky = N+E)
+        self.adultBtn = Radiobutton(self.frame, text='Adult', variable=self.classname, value='adult', command = self.setClass)
+        self.adultBtn.grid(row = 8, column = 1, padx = (0,50), sticky = N+E)
 
-        # radio button for age / face direction
-        self.ages = StringVar()
+        ## radio button: Age
         self.ageLb = Label(self.frame, text = 'Age:')
-        self.ageLb.grid(row = 6, column = 2, sticky = W+N)
+        self.ageLb.grid(row = 6, column = 2, sticky = N+W)
+        self.ages = StringVar()
+        self.ages.set('0') # init
         self.age6mBtn = Radiobutton(self.frame, text='0-6 month', variable=self.ages, value='0', command = self.setAge)
-        self.age6mBtn.grid(row = 7, column = 2, sticky = W+N)
+        self.age6mBtn.grid(row = 7, column = 2, padx = (0,50), sticky = N+W)
         self.age12mBtn = Radiobutton(self.frame, text='7-12 month', variable=self.ages, value='1', command = self.setAge)
-        self.age12mBtn.grid(row = 8, column = 2, sticky = W+N)
+        self.age12mBtn.grid(row = 8, column = 2, padx = (0,50), sticky = N+W)
         self.age6yrBtn = Radiobutton(self.frame, text='12m-6 years', variable=self.ages, value='2', command = self.setAge)
-        self.age6yrBtn.grid(row = 9, column = 2, sticky = W+N)
+        self.age6yrBtn.grid(row = 9, column = 2, padx = (0,50), sticky = N+W)
         self.age6upBtn = Radiobutton(self.frame, text='6 years up', variable=self.ages, value='3', command = self.setAge)
-        self.age6upBtn.grid(row = 10, column = 2, sticky = W+N)
-
-        self.fcLb = Label(self.frame, text = 'Face Direction:')
-        self.fcLb.grid(row = 11, column = 2, sticky = W+N)
+        self.age6upBtn.grid(row = 10, column = 2, padx = (0,50), sticky = N+W)
+        
+        ## radio button: Face direction
+        self.fcLb = Label(self.frame, text = 'Face direction:')
+        self.fcLb.grid(row = 6, column = 3, padx = (0,40), sticky = N+W)
         self.facedir = StringVar()
+        self.facedir.set('front') # init
         self.fcfrontBtn = Radiobutton(self.frame, text='Front', variable=self.facedir, value='front', command = self.setFace)
-        self.fcfrontBtn.grid(row = 12, column = 2, sticky = W+N)
+        self.fcfrontBtn.grid(row = 7, column = 3, padx = (0,50), sticky = N+W)
         self.fcsideBtn = Radiobutton(self.frame, text='Side', variable=self.facedir, value='side', command = self.setFace)
-        self.fcsideBtn.grid(row = 13, column = 2, sticky = W+N)
+        self.fcsideBtn.grid(row = 8, column = 3, padx = (0,50), sticky = N+W)
         self.fcbackBtn = Radiobutton(self.frame, text='Back', variable=self.facedir, value='back', command = self.setFace)
-        self.fcbackBtn.grid(row = 14, column = 2, sticky = W+N)
+        self.fcbackBtn.grid(row = 9, column = 3, padx = (0,50), sticky = N+W)
 
+        ## check button: In blanket
         self.covered = StringVar()
-        self.coveredBtn = Checkbutton(self.frame, text='In blanket', variable=self.covered, onvalue=0, offvalue=1, command = self.setCovered)
-        self.coveredBtn.grid(row = 15, column = 2, sticky = W+N)
-
-        self.confirmBtn = Button(self.frame, text = 'Confirm Class', command = self.confirmed, height = 4)
-        self.confirmBtn.grid(row = 16, column = 2, sticky = W+N)
-        self.finalOne = Label(self.frame, bg='tomato', width=20, text='')
-        self.finalOne.grid(row = 17, column = 2, sticky = W+N)
-        self.finalTwo = Label(self.frame, bg='tomato', width=20, text='')
-        self.finalTwo.grid(row = 18, column = 2, sticky = W+N)
-
-
-        # control panel for image navigation
+        self.covered.set(1) # init
+        self.coveredBtn = Checkbutton(self.frame, text='In blanket', variable=self.covered, onvalue=1, offvalue=0, command = self.setCovered)
+        self.coveredBtn.grid(row = 6, column = 4, padx = (0,50), sticky = N+E)
+       
+        ## control panel for image navigation
         self.ctrPanel = Frame(self.frame)
-        self.ctrPanel.grid(row = 19, column = 1, columnspan = 2, sticky = W+E)
+        self.ctrPanel.grid(row = 11, column = 1, columnspan = 4, sticky = W+E)
+        '''
         self.prevBtn = Button(self.ctrPanel, text='<< Prev', width = 10, command = self.prevImage)
         self.prevBtn.pack(side = LEFT, padx = 5, pady = 3)
         self.nextBtn = Button(self.ctrPanel, text='Next >>', width = 10, command = self.nextImage)
         self.nextBtn.pack(side = LEFT, padx = 5, pady = 3)
+        '''
         self.progLabel = Label(self.ctrPanel, text = "Progress:     /    ")
         self.progLabel.pack(side = LEFT, padx = 5)
+        '''
         self.tmpLabel = Label(self.ctrPanel, text = "Go to Image No.")
         self.tmpLabel.pack(side = LEFT, padx = 5)
         self.idxEntry = Entry(self.ctrPanel, width = 5)
         self.idxEntry.pack(side = LEFT)
         self.goBtn = Button(self.ctrPanel, text = 'Go', command = self.gotoImage)
         self.goBtn.pack(side = LEFT)
+        '''
+
+        # [RIGHT PART]
+        ## showing bbox info & delete bbox
+        self.lb1 = Label(self.frame, text = 'Bounding boxes:')
+        self.lb1.grid(row = 2, column = 5,  sticky = W+N)
+
+        self.btnDel = Button(self.frame, text = 'Delete', width = 20, command = self.delBBox)
+        self.btnDel.grid(row = 3, column = 5, sticky = W+N)
+
+        self.btnClear = Button(self.frame, text = 'ClearAll', width = 20, command = self.clearBBox)
+        self.btnClear.grid(row = 4, column = 5, sticky = W+N)
+        
+        self.listbox = Listbox(self.frame, width = 25, height = 20)
+        self.listbox.grid(row = 5, column = 5, sticky = W+N)
+
+        ## button: Next bbox
+        self.nextbboxBtn = Button(self.frame, text = 'Next bbox', command = self.nextBBox, height = 4)
+        self.nextbboxBtn.grid(row = 6, column = 5, rowspan = 2, sticky = W+N)
+
+        self.confirmBtn = Button(self.frame, text = 'Confirm Class', command = self.confirmed, height = 4)
+        self.confirmBtn.grid(row = 8, column = 5, rowspan = 2, sticky = W+N)
+        self.finalOne = Label(self.frame, bg='tomato', width=20, text='')
+        self.finalOne.grid(row = 10, column = 5, sticky = W+N)
+        self.finalTwo = Label(self.frame, bg='tomato', width=20, text='')
+        self.finalTwo.grid(row = 11, column = 5, sticky = W+N)
 
         # display mouse position
         self.disp = Label(self.ctrPanel, text='')
@@ -259,16 +273,19 @@ class LabelTool():
 
     def loadImage(self):
         # load image
-        imagepath = self.imageList[self.cur - 1]
-        print(imagepath, self.imageList)
-        self.img = Image.open(imagepath)
-        size = self.img.size
-        self.factor = max(size[0]/1000, size[1]/1000., 1.)
-        self.img = self.img.resize((int(size[0]/self.factor), int(size[1]/self.factor)))
-        self.tkimg = ImageTk.PhotoImage(self.img)
-        self.mainPanel.config(width = max(self.tkimg.width(), PSIZE), height = max(self.tkimg.height(), PSIZE))
-        self.mainPanel.create_image(0, 0, image = self.tkimg, anchor=NW)
-        self.progLabel.config(text = "%04d/%04d" %(self.cur, self.total))
+        if 1:
+            imagepath = self.imageList[self.cur - 1]
+            print(imagepath, self.imageList)
+            self.img = Image.open(imagepath)
+            size = self.img.size
+            self.factor = max(size[0]/1000, size[1]/1000., 1.)
+            self.img = self.img.resize((int(size[0]/self.factor), int(size[1]/self.factor)))
+            self.tkimg = ImageTk.PhotoImage(self.img)
+            self.mainPanel.config(width = max(self.tkimg.width(), PSIZE), height = max(self.tkimg.height(), PSIZE))
+            self.mainPanel.create_image(0, 0, image = self.tkimg, anchor=NW)
+            self.progLabel.config(text = "%04d/%04d" %(self.cur, self.total))
+        else:
+            pass
 
         # load labels
         self.clearBBox()
@@ -298,7 +315,7 @@ class LabelTool():
                                                             outline = COLORS[color_index])
                                                             #outline = COLORS[(len(self.bboxList)-1) % len(COLORS)])
                     self.bboxIdList.append(tmpId)
-                    self.listbox.insert(END, '%s : (%d, %d) -> (%d, %d)' %(tmp[4], tmp[0], tmp[1], tmp[2], tmp[3]))
+                    self.listbox.insert(END, '(%d, %d) -> (%d, %d)' %(tmp[0], tmp[1], tmp[2], tmp[3]))
                     self.listbox.itemconfig(len(self.bboxIdList) - 1, fg = COLORS[color_index])
                     #self.listbox.itemconfig(len(self.bboxIdList) - 1, fg = COLORS[(len(self.bboxIdList) - 1) % len(COLORS)])
 
@@ -325,7 +342,7 @@ class LabelTool():
             self.bboxList.append((x1, y1, x2, y2, self.currentLabelclass))
             self.bboxIdList.append(self.bboxId)
             self.bboxId = None
-            self.listbox.insert(END, '%s : (%d, %d) -> (%d, %d)' %(self.currentLabelclass, x1, y1, x2, y2))
+            self.listbox.insert(END, '(%d, %d) -> (%d, %d)' %(x1, y1, x2, y2))
             self.listbox.itemconfig(len(self.bboxIdList) - 1, fg = COLORS[(len(self.bboxIdList) - 1) % len(COLORS)])
         self.STATE['click'] = 1 - self.STATE['click']
 
@@ -354,8 +371,10 @@ class LabelTool():
                 self.bboxId = None
                 self.STATE['click'] = 0
 
+    #[Ryk], to be modified
     def delBBox(self):
         sel = self.listbox.curselection()
+        print('##### listbox.curselection = ', self.listbox.curselection())
         if len(sel) != 1 :
             return
         idx = int(sel[0])
@@ -370,6 +389,9 @@ class LabelTool():
         self.listbox.delete(0, len(self.bboxList))
         self.bboxIdList = []
         self.bboxList = []
+
+    def nextBBox(self):
+        pass  
 
     def prevImage(self, event = None):
         self.saveImage()
