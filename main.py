@@ -62,10 +62,10 @@ class LabelTool():
 
         ## entry: input image dir
         self.svSourcePath = StringVar()
+        self.svSourcePath.set(os.getcwd())
         self.entrySrc = Entry(self.frame, textvariable = self.svSourcePath)
         self.entrySrc.grid(row = 0, column = 1, columnspan=4, sticky = W+E)
-        self.svSourcePath.set(os.getcwd())
-
+        
         ## button: Label Folder
         self.desDirBtn = Button(self.frame, text = "Label Folder", command = self.selectDesDir, width = 10)
         self.desDirBtn.grid(row = 1, column = 0)
@@ -129,19 +129,20 @@ class LabelTool():
 
         ## check button: In blanket
         self.covered = StringVar()
-        self.covered.set(1) # init
+        self.covered.set(0) # init
         self.coveredBtn = Checkbutton(self.frame, text='In blanket', variable=self.covered, onvalue=1, offvalue=0, command = self.setCovered)
         self.coveredBtn.grid(row = 6, column = 4, padx = (0,50), sticky = N+E)
        
         ## control panel for image navigation
         self.ctrPanel = Frame(self.frame)
         self.ctrPanel.grid(row = 11, column = 1, columnspan = 4, sticky = W+E)
-        '''
+        
         self.prevBtn = Button(self.ctrPanel, text='<< Prev', width = 10, command = self.prevImage)
         self.prevBtn.pack(side = LEFT, padx = 5, pady = 3)
+        
         self.nextBtn = Button(self.ctrPanel, text='Next >>', width = 10, command = self.nextImage)
         self.nextBtn.pack(side = LEFT, padx = 5, pady = 3)
-        '''
+        
         self.progLabel = Label(self.ctrPanel, text = "Progress:     /    ")
         self.progLabel.pack(side = LEFT, padx = 5)
         '''
@@ -173,9 +174,9 @@ class LabelTool():
 
         self.confirmBtn = Button(self.frame, text = 'Confirm Class', command = self.confirmed, height = 4)
         self.confirmBtn.grid(row = 8, column = 5, rowspan = 2, sticky = W+N)
-        self.finalOne = Label(self.frame, bg='tomato', width=20, text='')
+        self.finalOne = Label(self.frame, bg='tomato', width=20, height = 2, text='')
         self.finalOne.grid(row = 10, column = 5, sticky = W+N)
-        self.finalTwo = Label(self.frame, bg='tomato', width=20, text='')
+        self.finalTwo = Label(self.frame, bg='tomato', width=20, height = 2, text='')
         self.finalTwo.grid(row = 11, column = 5, sticky = W+N)
 
         # display mouse position
@@ -188,6 +189,7 @@ class LabelTool():
     def selectSrcDir(self):
         path = filedialog.askdirectory(title="Select image source folder", initialdir=self.svSourcePath.get())
         self.svSourcePath.set(path)
+        self.loadDir()
         return
 
     def selectDesDir(self):
@@ -332,7 +334,6 @@ class LabelTool():
                 #f.write(' '.join(map(str, bbox)) + '\n')
         print('Image No. %d saved' %(self.cur))
 
-
     def mouseClick(self, event):
         if self.STATE['click'] == 0:
             self.STATE['x'], self.STATE['y'] = event.x, event.y
@@ -405,13 +406,14 @@ class LabelTool():
             self.cur += 1
             self.loadImage()
 
+    '''
     def gotoImage(self):
         idx = int(self.idxEntry.get())
         if 1 <= idx and idx <= self.total:
             self.saveImage()
             self.cur = idx
             self.loadImage()
-
+    '''
 
 
 if __name__ == '__main__':
