@@ -77,10 +77,12 @@ class LabelTool():
         self.svDestinationPath.set(os.path.join(os.getcwd(),"Labels"))
 
         ## button: Load Dir
+        '''
         self.ldBtn = Button(self.frame, text = "Load Dir", command = self.loadDir)
         self.ldBtn.grid(row = 0, column = 5, rowspan = 2, columnspan = 2, padx = 2, pady = 2, ipadx = 5, ipady = 5)
-
-        # [CENTRE PART]
+        '''
+        
+        # [CENTRE PART]       
         ## main panel for labeling
         self.mainPanel = Canvas(self.frame, cursor = 'tcross')
         self.mainPanel.bind("<Button-1>", self.mouseClick)
@@ -89,7 +91,7 @@ class LabelTool():
         self.parent.bind("s", self.cancelBBox)
         self.parent.bind("p", self.prevImage) # press 'p' to go backforward
         self.parent.bind("n", self.nextImage) # press 'n' to go forward 
-        self.mainPanel.grid(row = 2, column = 1, rowspan = 4, columnspan = 4,sticky = W+E+N+S)
+        self.mainPanel.grid(row = 2, column = 1, rowspan = 4, columnspan = 4, sticky = W+E+N+S)
 
         ## radio button: Class
         self.classLb = Label(self.frame, text = 'Class:')
@@ -145,6 +147,9 @@ class LabelTool():
         
         self.progLabel = Label(self.ctrPanel, text = "Progress:     /    ")
         self.progLabel.pack(side = LEFT, padx = 5)
+
+        self.filenameLabel = Label(self.ctrPanel, text = "File name:")
+        self.filenameLabel.pack(side = LEFT, padx = 5)
         '''
         self.tmpLabel = Label(self.ctrPanel, text = "Go to Image No.")
         self.tmpLabel.pack(side = LEFT, padx = 5)
@@ -234,24 +239,26 @@ class LabelTool():
 
     def loadDir(self):
         self.parent.focus()
-        # get image list
-        #self.imageDir = os.path.join(r'./Images', '%03d' %(self.category))
         self.imageDir = self.svSourcePath.get()
+        self.imageList = []
         if not os.path.isdir(self.imageDir):
             messagebox.showerror("Error!", message = "The specified dir doesn't exist!")
             return
 
         extlist = ["*.JPEG", "*.jpeg", "*JPG", "*.jpg", "*.PNG", "*.png", "*.BMP", "*.bmp"]
+        
         for e in extlist:
             filelist = glob.glob(os.path.join(self.imageDir, e))
             self.imageList.extend(filelist)
+            print(type(self.imageList),type(filelist))
+
         if len(self.imageList) == 0:
             print('No images found in the specified dir!')
             return
 
-        # default to the 1st image in the collection
         self.cur = 1
         self.total = len(self.imageList)
+        self.imageList.sort()
 
         # set up output dir
         #self.outDir = os.path.join(r'./Labels', '%03d' %(self.category))
@@ -275,25 +282,23 @@ class LabelTool():
 
     def loadImage(self):
         # load image
-        if 1:
-            imagepath = self.imageList[self.cur - 1]
-            print(imagepath, self.imageList)
-            self.img = Image.open(imagepath)
-            size = self.img.size
-            self.factor = max(size[0]/1000, size[1]/1000., 1.)
-            self.img = self.img.resize((int(size[0]/self.factor), int(size[1]/self.factor)))
-            self.tkimg = ImageTk.PhotoImage(self.img)
-            self.mainPanel.config(width = max(self.tkimg.width(), PSIZE), height = max(self.tkimg.height(), PSIZE))
-            self.mainPanel.create_image(0, 0, image = self.tkimg, anchor=NW)
-            self.progLabel.config(text = "%04d/%04d" %(self.cur, self.total))
-        else:
-            pass
+        imagepath = self.imageList[self.cur - 1]
+        print(imagepath, self.imageList)
+        self.img = Image.open(imagepath)
+        size = self.img.size
+        self.factor = max(size[0]/1000, size[1]/1000., 1.)
+        self.img = self.img.resize((int(size[0]/self.factor), int(size[1]/self.factor)))
+        self.tkimg = ImageTk.PhotoImage(self.img)
+        self.mainPanel.config(width = max(self.tkimg.width(), PSIZE), height = max(self.tkimg.height(), PSIZE))
+        self.mainPanel.create_image(0, 0, image = self.tkimg, anchor=NW)
+        self.progLabel.config(text = "%04d/%04d" %(self.cur, self.total))
 
         # load labels
         self.clearBBox()
         #self.imagename = os.path.split(imagepath)[-1].split('.')[0]
         fullfilename = os.path.basename(imagepath)
         self.imagename, _ = os.path.splitext(fullfilename)
+        self.filenameLabel.config(text = "File name : %s" %(self.imagename))
         labelname = self.imagename + '.txt'
         self.labelfilename = os.path.join(self.outDir, labelname)
         bbox_cnt = 0
