@@ -173,16 +173,18 @@ class LabelTool():
         self.listbox = Listbox(self.frame, width = 25, height = 20)
         self.listbox.grid(row = 5, column = 5, sticky = W+N)
 
-        ## button: Next bbox
-        self.nextbboxBtn = Button(self.frame, text = 'Next bbox', command = self.nextBBox, height = 4)
-        self.nextbboxBtn.grid(row = 6, column = 5, rowspan = 2, sticky = W+N)
+        ## button: Bbox ok
+        self.bboxBtn = Button(self.frame, text = 'BBOX OK', command = self.confirmBBOX, height = 4)
+        self.bboxBtn.grid(row = 6, column = 5, rowspan = 2, sticky = W+N)
 
-        self.confirmBtn = Button(self.frame, text = 'Confirm Class', command = self.confirmed, height = 4)
-        self.confirmBtn.grid(row = 8, column = 5, rowspan = 2, sticky = W+N)
-        self.finalOne = Label(self.frame, bg='tomato', width=20, height = 2, text='')
-        self.finalOne.grid(row = 10, column = 5, sticky = W+N)
-        self.finalTwo = Label(self.frame, bg='tomato', width=20, height = 2, text='')
-        self.finalTwo.grid(row = 11, column = 5, sticky = W+N)
+        ## button: Done and load next image
+        self.doneBtn = Button(self.frame, text = 'DONE', command = self.confirmPhoto, fg='red', height = 1)
+        self.doneBtn.grid(row = 9, column = 5, padx = (75, 0), sticky = W+N)
+
+        self.logLabel_1 = Label(self.frame, bg='tomato', width=20, height = 2, text='')
+        self.logLabel_1.grid(row = 10, column = 5, sticky = W+N)
+        self.logLabel_2 = Label(self.frame, bg='tomato', width=20, height = 2, text='')
+        self.logLabel_2.grid(row = 11, column = 5, sticky = W+N)
 
         # display mouse position
         self.disp = Label(self.ctrPanel, text='')
@@ -217,7 +219,10 @@ class LabelTool():
         self.currentLabelclass = self.classname.get()
         print('set label class to : %s' % self.currentLabelclass)
 
-    def confirmed(self):
+    #[Ryk] ToDo
+    #1. Update dictionary
+    #2. Pop-up window
+    def confirmBBOX(self):
         textClass = self.classname.get()
         textAge = self.ages.get()
         if textAge == '0':
@@ -234,8 +239,16 @@ class LabelTool():
             textCovered = 'No blanket'
         else:
             textCovered = 'In blanket'
-        self.finalOne.config(text=textClass + '/' + textAge)
-        self.finalTwo.config(text=textFace + '/' + textCovered)
+        self.logLabel_1.config(text=textClass + '/' + textAge)
+        self.logLabel_2.config(text=textFace + '/' + textCovered)
+    
+    #[Ryk] ToDo
+    #1. Update dictionary
+    #2. Save dictionary to json
+    #3. Pop-up window
+    #3. Load next image
+    def confirmPhoto(self):
+        pass
 
     def loadDir(self):
         self.parent.focus()
@@ -396,8 +409,10 @@ class LabelTool():
         self.bboxIdList = []
         self.bboxList = []
 
+    '''
     def nextBBox(self):
         pass  
+    '''
 
     def prevImage(self, event = None):
         self.saveImage()
