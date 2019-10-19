@@ -67,14 +67,18 @@ class LabelTool():
         self.entrySrc.grid(row = 0, column = 1, columnspan=4, sticky = W+E)
         
         ## button: Label Folder
+        '''
         self.desDirBtn = Button(self.frame, text = "Label Folder", command = self.selectDesDir, width = 10)
         self.desDirBtn.grid(row = 1, column = 0)
-
+        '''
+        
         ## entry: output label dir
+        '''
         self.svDestinationPath = StringVar()
         self.entryDes = Entry(self.frame, textvariable = self.svDestinationPath)
         self.entryDes.grid(row = 1, column = 1, columnspan=4, sticky = W+E)
         self.svDestinationPath.set(os.path.join(os.getcwd(),"Labels"))
+        '''
 
         ## button: Load Dir
         '''
@@ -97,10 +101,10 @@ class LabelTool():
         self.classLb = Label(self.frame, text = 'Class:')
         self.classLb.grid(row = 6, column = 1, padx = (0,60), sticky = N+E)
         self.classname = StringVar()
-        self.classname.set('child') # init
-        self.childBtn = Radiobutton(self.frame, text='Child', variable=self.classname, value='child', command = self.setClass)
+        self.classname.set('0') # init
+        self.childBtn = Radiobutton(self.frame, text='Child', variable=self.classname, value='0', command = self.setClass)
         self.childBtn.grid(row = 7, column = 1, padx = (0,50), sticky = N+E)
-        self.adultBtn = Radiobutton(self.frame, text='Adult', variable=self.classname, value='adult', command = self.setClass)
+        self.adultBtn = Radiobutton(self.frame, text='Adult', variable=self.classname, value='1', command = self.setClass)
         self.adultBtn.grid(row = 8, column = 1, padx = (0,50), sticky = N+E)
 
         ## radio button: Age
@@ -121,12 +125,12 @@ class LabelTool():
         self.fcLb = Label(self.frame, text = 'Face direction:')
         self.fcLb.grid(row = 6, column = 3, padx = (0,40), sticky = N+W)
         self.facedir = StringVar()
-        self.facedir.set('front') # init
-        self.fcfrontBtn = Radiobutton(self.frame, text='Front', variable=self.facedir, value='front', command = self.setFace)
+        self.facedir.set('0') # init
+        self.fcfrontBtn = Radiobutton(self.frame, text='Front', variable=self.facedir, value='0', command = self.setFace)
         self.fcfrontBtn.grid(row = 7, column = 3, padx = (0,50), sticky = N+W)
-        self.fcsideBtn = Radiobutton(self.frame, text='Side', variable=self.facedir, value='side', command = self.setFace)
+        self.fcsideBtn = Radiobutton(self.frame, text='Side', variable=self.facedir, value='1', command = self.setFace)
         self.fcsideBtn.grid(row = 8, column = 3, padx = (0,50), sticky = N+W)
-        self.fcbackBtn = Radiobutton(self.frame, text='Back', variable=self.facedir, value='back', command = self.setFace)
+        self.fcbackBtn = Radiobutton(self.frame, text='Back', variable=self.facedir, value='2', command = self.setFace)
         self.fcbackBtn.grid(row = 9, column = 3, padx = (0,50), sticky = N+W)
 
         ## check button: In blanket
@@ -199,10 +203,12 @@ class LabelTool():
         self.loadDir()
         return
 
+    '''
     def selectDesDir(self):
         path = filedialog.askdirectory(title="Select label output folder", initialdir=self.svDestinationPath.get())
         self.svDestinationPath.set(path)
         return
+    '''
 
     def setAge(self):
         print('age:', self.ages.get())
@@ -224,23 +230,37 @@ class LabelTool():
     #2. Pop-up window
     def confirmBBOX(self):
         textClass = self.classname.get()
+        if textClass == '0':
+            infoClass = 'Child'
+        else:
+            infoClass = 'Adult'
+
         textAge = self.ages.get()
         if textAge == '0':
-            textAge = '0-6 month'
+            infoAge = '0-6 month'
         elif textAge == '1':
-            textAge = '7-12 month'
+            infoAge = '7-12 month'
         elif textAge == '2':
-            textAge = '1-6 years old'
+            infoAge = '1-6 years old'
         else:
-            textAge = '6 years up'
+            infoAge = '6 years up'
+
         textFace = self.facedir.get()
+        if textFace == '0':
+            infoFace = 'Front'
+        elif textFace == '1':
+            infoFace = 'Side'
+        else:
+            infoFace = 'Back'
+
         textCovered = self.covered.get()
         if textCovered == '0':
-            textCovered = 'No blanket'
+            infoCovered = 'No blanket'
         else:
-            textCovered = 'In blanket'
-        self.logLabel_1.config(text=textClass + '/' + textAge)
-        self.logLabel_2.config(text=textFace + '/' + textCovered)
+            infoCovered = 'In blanket'
+            
+        self.logLabel_1.config(text = infoClass + '/' + infoAge)
+        self.logLabel_2.config(text = infoFace + '/' + infoCovered)
     
     #[Ryk] ToDo
     #1. Update dictionary
@@ -273,9 +293,10 @@ class LabelTool():
         self.total = len(self.imageList)
         self.imageList.sort()
 
-        # set up output dir
+        #[Ryk]
+        #set up output dir the same as svSourcePath
         #self.outDir = os.path.join(r'./Labels', '%03d' %(self.category))
-        self.outDir = self.svDestinationPath.get()
+        self.outDir = self.svSourcePath.get()
         if not os.path.exists(self.outDir):
             os.mkdir(self.outDir)
 
