@@ -2,6 +2,7 @@ from tkinter import *
 from tkinter import filedialog
 from tkinter import messagebox
 from tkinter import ttk
+from tkinter import Toplevel
 from PIL import Image, ImageTk
 import os
 import glob
@@ -261,13 +262,66 @@ class LabelTool():
             
         self.logLabel_1.config(text = infoClass + '/' + infoAge)
         self.logLabel_2.config(text = infoFace + '/' + infoCovered)
+        self.popupWindowGen(popupWindowType = 'BBOX_OK')
+
+    #[Ryk] ToDo
+    def updateDictionary(self):
+        pass
     
     #[Ryk] ToDo
     #1. Update dictionary
-    #2. Save dictionary to json
+    #2. Save dictionary to json file
     #3. Pop-up window
     #3. Load next image
     def confirmPhoto(self):
+        self.popupWindowGen(popupWindowType = 'DONE')
+
+    # create pop-up window
+    def popupWindowGen(self, popupWindowType = None):
+        self.popupWindowFlag = 1
+        # BBOX OK   
+        if popupWindowType == 'BBOX_OK':
+            self.popupWindow = Toplevel(self.parent)
+            self.popupWindow.title("Sure?")
+            self.popup_label = Label(self.popupWindow,text="Label next bbox?", fg="black")
+            #self.popup_label.config(width=20)
+            #self.popup_label.config(font=("Courier", 14))
+            self.popupWindow.geometry("%dx%d" % (200, 200))
+            #self.center(self.popupWindow)
+            self.popup_label.pack()
+        
+            self.btn_popup1 = Button(self.popupWindow, text="OK", height=1, width=3, command=self.popup_ok)
+            self.btn_popup2 = Button(self.popupWindow, text="CANCLE", height=1, width=3, command=self.popup_cancle)
+            self.btn_popup1.pack(side=RIGHT)
+            self.btn_popup2.pack(side=LEFT)
+        # DONE
+        elif popupWindowType == 'DONE':          
+            self.popupWindow = Toplevel(self.parent)
+            self.popupWindow.title("Sure?")
+            self.popup_label = Label(self.popupWindow,text="Save and load next image", fg="black")
+            #self.popup_label.config(width=20)
+            #self.popup_label.config(font=("Courier", 14))
+            self.popupWindow.geometry("%dx%d" % (200, 200))
+            #self.center(self.popupWindow)
+            self.popup_label.pack()
+        
+            self.btn_popup1 = Button(self.popupWindow, text="OK", height=5, width=5, command=self.popup_ok)
+            self.btn_popup2 = Button(self.popupWindow, text="CANCLE", height=5, width=5, command=self.popup_cancle)
+            self.btn_popup1.pack(side=RIGHT)
+            self.btn_popup2.pack(side=LEFT)
+        else:
+            messagebox.showerror("Error!", message = "popup window error!")
+
+
+    #[Ryk] ToDo 
+    def popup_ok(self):
+        self.popupWindow.destroy()
+        self.popupWindowFlag = 0
+        pass
+
+    def popup_cancle(self):
+        self.popupWindow.destroy()
+        self.popupWindowFlag = 0
         pass
 
     def loadDir(self):
