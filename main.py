@@ -16,9 +16,6 @@ COLORS = ['cyan', 'blue', 'red', 'orange', 'limegreen', 'hotpink', 'green', 'fuc
 SIZE = 256, 256
 # panel size for init
 PSIZE = 400
-# label.json
-LABEL_JSON = 'label.json'
-
 
 class LabelTool():
     def __init__(self, master):
@@ -28,6 +25,7 @@ class LabelTool():
         self.frame = Frame(self.parent)
         self.frame.pack(fill=BOTH, expand=1)
         self.parent.resizable(width = FALSE, height = FALSE)
+        self.area = 0
 
         # initialize global state
         self.imageDir = ''
@@ -39,9 +37,7 @@ class LabelTool():
         self.imagename = ''
         self.labelfilename = ''
         self.tkimg = None
-        self.currentLabelclass = ''
         self.cla_can_temp = []
-        self.classcandidate_filename = 'class.txt'
 
         # initialize mouse state
         self.STATE = {}
@@ -54,6 +50,20 @@ class LabelTool():
         self.bboxList = []
         self.hl = None
         self.vl = None
+
+        # reference to whole image information
+        # sve filename, path, colored, scene, pet, number of child, number of adult
+        self.imgInfo = []
+
+        # reference to bbox info
+        self.classList = []
+        self.ageList = []
+        self.blanketList = []
+        self.faceList =[]
+        self.sizeList = []
+
+        # reference to all images dic
+        self.dic_img = {}
 
         # ----------------- GUI stuff ---------------------
         # [UPPER PART]
@@ -208,11 +218,6 @@ class LabelTool():
         self.doneBtn.config(state=NORMAL)
     
     def disableGUI(self):
-        self.classname.set(None)
-        self.ages.set(None)
-        self.facedir.set(None)
-        self.covered.set('0')
-        print('self.covered=',self.covered.get())
         self.childBtn.config(state=DISABLED)
         self.adultBtn.config(state=DISABLED)
         self.age6mBtn.config(state=DISABLED)
@@ -240,123 +245,7 @@ class LabelTool():
         return
 
     def setClass(self):
-        self.currentLabelclass = self.classname.get()
-        print('set label class to : %s' % self.currentLabelclass)
-
-    #[Ryk] ToDo
-    #1. Update dictionary
-    #2. Pop-up window
-    def confirmBBOX(self):   
-        if self.classname.get()=='None' or self.ages.get()=='None' or self.facedir.get()=='None':
-            return
-        
-        self.popupWindowGen(popupWindowType='BBOX_OK')
-    
-        textClass = self.classname.get()
-        if textClass == '0':
-            infoClass = 'Child'
-        else:
-            infoClass = 'Adult'
-
-        textAge = self.ages.get()
-        if textAge == '0':
-            infoAge = '0-6 month'
-        elif textAge == '1':
-            infoAge = '7-12 month'
-        elif textAge == '2':
-            infoAge = '1-6 years old'
-        else:
-            infoAge = '6 years up'
-
-        textFace = self.facedir.get()
-        if textFace == '0':
-            infoFace = 'Front'
-        elif textFace == '1':
-            infoFace = 'Side'
-        else:
-            infoFace = 'Back'
-
-        textCovered = self.covered.get()
-        if textCovered == '0':
-            infoCovered = 'No blanket'
-        else:
-            infoCovered = 'In blanket'
-            
-        self.logLabel_1.config(text = infoClass + '/' + infoAge)
-        self.logLabel_2.config(text = infoFace + '/' + infoCovered)
-
-    #[Ryk] ToDo
-    def updateDictionary(self):
-        pass
-    
-    #[Ryk] ToDo
-    #1. Update dictionary
-    #2. Save dictionary to json file
-    #3. Load next image
-    def confirmPhoto(self):
-        if self.classname.get()=='None' or self.ages.get()=='None' or self.facedir.get()=='None':
-            return
-        self.popupWindowGen(popupWindowType='DONE')
-
-    # create pop-up window
-    def popupWindowGen(self, popupWindowType=None, okBtn=True):
-        self.popupWindowFlag = 1
-        # BBOX OK   
-        if popupWindowType == 'BBOX_OK':
-            self.popupWindow = Toplevel(self.parent)
-            self.popupWindow.title("Sure?")
-            self.popup_label = Label(self.popupWindow, text="Label next bbox?", fg="black")
-            #self.popup_label.config(width=20)
-            #self.popup_label.config(font=("Courier", 14))
-            self.popupWindow.geometry("%dx%d" % (400, 200))
-            #self.center(self.popupWindow)
-            self.popup_label.pack()
-            
-            self.btn_popup1 = Button(self.popupWindow, text="OK", height=1, width=5, command=self.popup_ok)
-            self.btn_popup2 = Button(self.popupWindow, text="CANCLE", height=1, width=5, command=self.popup_cancle)
-            self.btn_popup1.pack(side=RIGHT)
-            self.btn_popup2.pack(side=LEFT)
-
-            if okBtn == False:
-                self.btn_popup1.config(state=DISABLED)
-        # DONE
-        elif popupWindowType == 'DONE':          
-            self.popupWindow = Toplevel(self.parent)
-            self.popupWindow.title("Sure?")
-            self.popup_label = Label(self.popupWindow,text="Save and load next image", fg="black")
-            #self.popup_label.config(width=20)
-            #self.popup_label.config(font=("Courier", 14))
-            self.popupWindow.geometry("%dx%d" % (400, 200))
-            #self.center(self.popupWindow)
-            self.popup_label.pack()
-
-            self.btn_popup1 = Button(self.popupWindow, text="OK", height=1, width=5, command=self.popup_ok)
-            self.btn_popup2 = Button(self.popupWindow, text="CANCLE", height=1, width=5, command=self.popup_cancle)
-            self.btn_popup1.pack(side=RIGHT)
-            self.btn_popup2.pack(side=LEFT)
-            
-            if okBtn == False:
-                self.btn_popup1.config(state=DISABLED)
-        else:
-            messagebox.showerror("Error!", message = "popup window error!")
-
-
-    #[Ryk] ToDo
-    def popup_ok(self):
-        self.popupWindow.destroy()
-        self.popupWindowFlag = 0
-        self.disableGUI()
-        self.updateDictionary()
-        '''
-        if popupWindowType == 'BBOX_OK':
-            #1. Save to json
-            #2. Load next image
-            pass    
-        '''
-
-    def popup_cancle(self):
-        self.popupWindow.destroy()
-        self.popupWindowFlag = 0
+        print('set label class:', self.classname.get())
 
     def loadDir(self):
         self.parent.focus()
@@ -377,7 +266,7 @@ class LabelTool():
             print('No images found in the specified dir!')
             return
 
-        self.cur = 1
+        self.cur = -1
         self.total = len(self.imageList)
         self.imageList.sort()
 
@@ -385,27 +274,46 @@ class LabelTool():
         #set up output dir the same as svSourcePath
         #self.outDir = os.path.join(r'./Labels', '%03d' %(self.category))
         self.outDir = self.svSourcePath.get()
+        print (self.svSourcePath.get())
         if not os.path.exists(self.outDir):
             os.mkdir(self.outDir)
 
-        # load csv file, compare images file list with csv
-        undoneList = self.imageList
-        if os.path.exists(self.outDir + "/" + LABEL_JSON):
-            labeled_list = utils.get_image_key(self.outDir + "/" + LABEL_JSON)
-            for (i, a) in enumerate(undoneList):
-                for (j, n) in enumerate(undoneList):
-                    name = n.split('/')[-1]
-                    if a == name:
-                        undoneList.remove(n)
+        # load json file, compare images file list with json
+        undoneList = []
+        self.labelfilename = self.imageDir + '/' + self.imageDir.split('/')[-1] + '.json'
+        if os.path.exists(self.labelfilename):
+            with open(self.labelfilename, 'r') as f:
+                data = json.load(f)
+                doneList = []
+                for i, j in enumerate(list(data.keys())):
+                    doneList.append(data[j]['path'])
+                undoneList = [i for i in self.imageList if not i in doneList or doneList.remove(i)]
+                self.imageList = undoneList
 
-        self.imageList = undoneList
         self.loadImage()
+        #self.loadLabel()
         print('%d images loaded from %s' %(self.total, self.imageDir))
 
     def loadImage(self):
-        # load image
+        # load image & directory information
         imagepath = self.imageList[self.cur - 1]
-        print(imagepath, self.imageList)
+        self.imgInfo.append(imagepath.split('/')[-1])
+        self.imgInfo.append(imagepath)
+        basicinfo = imagepath.split('/')[-2].split('_')
+        for (i, text) in enumerate(basicinfo):
+            if text == 'bw':
+                self.imgInfo.append(0)
+            elif text == 'colored':
+                self.imgInfo.append(1)
+            elif text == 'bedroom':
+                self.imgInfo.append('bedroom')
+            elif text == 'livingroom':
+                self.imgInfo.append('livingroom')
+            elif text == 'nopet':
+                self.imgInfo.append(0)
+            elif text == 'pet':
+                self.imgInfo.append(1)
+
         self.img = Image.open(imagepath)
         size = self.img.size
         self.factor = max(size[0]/1000, size[1]/1000., 1.)
@@ -414,10 +322,11 @@ class LabelTool():
         self.mainPanel.config(width = max(self.tkimg.width(), PSIZE), height = max(self.tkimg.height(), PSIZE))
         self.mainPanel.create_image(0, 0, image = self.tkimg, anchor=NW)
         self.progLabel.config(text = "%04d/%04d" %(self.cur, self.total))
-
-        # load labels
+        self.area = self.tkimg.width() * self.tkimg.height()
         self.clearBBox()
-        #self.imagename = os.path.split(imagepath)[-1].split('.')[0]
+
+    def loadLabel(self):
+        imagepath = self.imageList[self.cur - 1]
         fullfilename = os.path.basename(imagepath)
         self.imagename, _ = os.path.splitext(fullfilename)
         self.filenameLabel.config(text = "File name : %s" %(self.imagename))
@@ -430,7 +339,7 @@ class LabelTool():
                     if i == 0:
                         bbox_cnt = int(line.strip())
                         continue
-                    #tmp = [int(t.strip()) for t in line.split()]
+                    tmp = [int(t.strip()) for t in line.split()]
                     tmp = line.split()
                     tmp[0] = int(int(tmp[0])/self.factor)
                     tmp[1] = int(int(tmp[1])/self.factor)
@@ -448,6 +357,18 @@ class LabelTool():
                     self.listbox.itemconfig(len(self.bboxIdList) - 1, fg = COLORS[color_index])
                     #self.listbox.itemconfig(len(self.bboxIdList) - 1, fg = COLORS[(len(self.bboxIdList) - 1) % len(COLORS)])
 
+    def prevImage(self, event = None):
+        self.saveImage()
+        if self.cur > 1:
+            self.cur -= 1
+            self.loadImage()
+
+    def nextImage(self, event = None):
+        self.saveImage()
+        if self.cur < self.total:
+            self.cur += 1
+            self.loadImage()
+
     def saveImage(self):
         if self.labelfilename == '':
             return
@@ -461,19 +382,42 @@ class LabelTool():
                 #f.write(' '.join(map(str, bbox)) + '\n')
         print('Image No. %d saved' %(self.cur))
 
+    #[Dollphis] define BBOX size
     def mouseClick(self, event):
+        boxWidth = 0
+        boxHeight = 0
         if self.STATE['click'] == 0:
             self.STATE['x'], self.STATE['y'] = event.x, event.y
             self.disableGUI()
         else:
             x1, x2 = min(self.STATE['x'], event.x), max(self.STATE['x'], event.x)
             y1, y2 = min(self.STATE['y'], event.y), max(self.STATE['y'], event.y)
-            self.bboxList.append((x1, y1, x2, y2, self.currentLabelclass))
+            self.bboxList.append((x1, y1, x2, y2))
             self.bboxIdList.append(self.bboxId)
             self.bboxId = None
             self.listbox.insert(END, '(%d, %d) -> (%d, %d)' %(x1, y1, x2, y2))
             self.listbox.itemconfig(len(self.bboxIdList) - 1, fg = COLORS[(len(self.bboxIdList) - 1) % len(COLORS)])
             self.enableGUI()
+
+            if (x2 - x1) > 0:
+                boxWidth = x2 - x1
+            else:
+                boxWidth = x1 - x2
+
+            if (y2 - y1) > 0:
+                boxHeight = y2 - y1
+            else:
+                boxHeight = y1 - y2
+            bbox_area = boxWidth * boxHeight
+            percentage = float(bbox_area / self.area) * 100
+
+            if percentage < 20:
+                self.sizeList.append('small')
+            elif 20 <= percentage < 50:
+                self.sizeList.append('middle')
+            else:
+                self.sizeList.append('large')
+
         self.STATE['click'] = 1 - self.STATE['click']
 
     def mouseMove(self, event):
@@ -494,6 +438,81 @@ class LabelTool():
                                                             width = 2, \
                                                             outline = COLORS[len(self.bboxList) % len(COLORS)])
 
+    #[Ryk] ToDo
+    #1. Update dictionary
+    #2. Pop-up window
+    def confirmBBOX(self):
+        if self.classname.get()=='None' or self.ages.get()=='None' or self.facedir.get()=='None':
+            return
+        self.popupWindowGen(popupWindowType='BBOX_OK')
+
+    #[Ryk] ToDo
+    #1. Update dictionary
+    #2. Save dictionary to json file
+    #3. Load next image
+    def confirmPhoto(self):
+        if self.classname.get()=='None' or self.ages.get()=='None' or self.facedir.get()=='None':
+            return
+        self.popupWindowGen(popupWindowType='DONE')
+
+    # create pop-up window
+    def popupWindowGen(self, popupWindowType=None, okBtn=True):
+        self.popupWindowFlag = 1
+
+        self.WindwType = popupWindowType
+        if self.WindwType == 'BBOX_OK':
+            self.popupWindow = Toplevel(self.parent)
+            self.popupWindow.title("Sure?")
+            self.popup_label = Label(self.popupWindow, text="Label next bbox?", fg="black")
+            #self.popup_label.config(width=20)
+            #self.popup_label.config(font=("Courier", 14))
+            self.popupWindow.geometry("%dx%d" % (400, 200))
+            #self.center(self.popupWindow)
+            self.popup_label.pack()
+
+            self.btn_popup1 = Button(self.popupWindow, text="OK", height=1, width=5, command=self.popup_ok)
+            self.btn_popup2 = Button(self.popupWindow, text="CANCLE", height=1, width=5, command=self.popup_cancle)
+            self.btn_popup1.pack(side=RIGHT)
+            self.btn_popup2.pack(side=LEFT)
+
+            if okBtn == False:
+                self.btn_popup1.config(state=DISABLED)
+        # DONE
+        elif self.WindwType == 'DONE':
+            self.popupWindow = Toplevel(self.parent)
+            self.popupWindow.title("Sure?")
+            self.popup_label = Label(self.popupWindow,text="Save and load next image", fg="black")
+            #self.popup_label.config(width=20)
+            #self.popup_label.config(font=("Courier", 14))
+            self.popupWindow.geometry("%dx%d" % (400, 200))
+            #self.center(self.popupWindow)
+            self.popup_label.pack()
+
+            self.btn_popup1 = Button(self.popupWindow, text="OK", height=1, width=5, command=self.popup_ok)
+            self.btn_popup2 = Button(self.popupWindow, text="CANCLE", height=1, width=5, command=self.popup_cancle)
+            self.btn_popup1.pack(side=RIGHT)
+            self.btn_popup2.pack(side=LEFT)
+
+            if okBtn == False:
+                self.btn_popup1.config(state=DISABLED)
+        else:
+            messagebox.showerror("Error!", message = "popup window error!")
+
+    #[Ryk] ToDo
+    def popup_ok(self):
+        self.popupWindow.destroy()
+        self.popupWindowFlag = 0
+        self.disableGUI()
+
+        if self.WindwType == 'BBOX_OK':
+            self.updateBBoxList()
+        else:
+            self.updateImageDic()
+
+    def popup_cancle(self):
+        self.popupWindow.destroy()
+        self.popupWindowFlag = 0
+
     def cancelBBox(self, event):
         if 1 == self.STATE['click']:
             if self.bboxId:
@@ -504,6 +523,7 @@ class LabelTool():
     #[Ryk] ToDo
     # if bbox == 0, then disable GUI
     def delBBox(self):
+        # delete bbox only
         sel = self.listbox.curselection()
         if len(sel) != 1 :
             return
@@ -512,6 +532,13 @@ class LabelTool():
         self.bboxIdList.pop(idx)
         self.bboxList.pop(idx)
         self.listbox.delete(idx)
+        self.sizeList.pop(idx)
+
+        # delete bbox detail
+        self.classList.pop(idx)
+        self.ageList.pop(idx)
+        self.blanketList.pop(idx)
+        self.faceList.pop(idx)
 
     def clearBBox(self):
         for idx in range(len(self.bboxIdList)):
@@ -519,32 +546,117 @@ class LabelTool():
         self.listbox.delete(0, len(self.bboxList))
         self.bboxIdList = []
         self.bboxList = []
+        self.classList = []
+        self.ageList = []
+        self.blanketList = []
+        self.faceList = []
+        self.sizeList = []
         self.disableGUI()
 
-    def prevImage(self, event = None):
-        self.saveImage()
-        if self.cur > 1:
-            self.cur -= 1
-            self.loadImage()
+    def updateBBoxList(self):
+        print (self.classname.get(), self.ages.get(),self.facedir.get(), self.covered.get())
+        infoClass = ''
+        textClass = self.classname.get()
+        if textClass == '0':
+            infoClass = 'Child'
+        else:
+            infoClass = 'Adult'
+        self.classList.append(infoClass)
 
-    def nextImage(self, event = None):
-        self.saveImage()
-        if self.cur < self.total:
+        infoAge = ''
+        textAge = self.ages.get()
+        if textAge == '0':
+            infoAge = '0-6 month'
+        elif textAge == '1':
+            infoAge = '7-12 month'
+        elif textAge == '2':
+            infoAge = '1-6 years old'
+        else:
+            infoAge = '6 years up'
+        self.ageList.append(infoAge)
+
+        infoFace = ''
+        textFace = self.facedir.get()
+        if textFace == '0':
+            infoFace = 'Front'
+        elif textFace == '1':
+            infoFace = 'Side'
+        else:
+            infoFace = 'Back'
+        self.faceList.append(infoFace)
+
+        infoCovered = ''
+        textCovered = self.covered.get()
+        if textCovered == '0':
+            infoCovered = 'No blanket'
+        else:
+            infoCovered = 'In blanket'
+        self.blanketList.append(infoCovered)
+        self.logLabel_1.config(text = infoClass + '/' + infoAge)
+        self.logLabel_2.config(text = infoFace + '/' + infoCovered)
+        print(self.imgInfo)
+        print(self.bboxList)
+        print(self.classList)
+        print(self.ageList)
+        print(self.faceList)
+        print(self.blanketList)
+        print(self.sizeList)
+
+    #[Ryk] ToDo
+    def updateImageDic(self):
+        data = {}
+        num_child = 0
+        for i in range(len(self.classList)):
+            if self.classList[i] == 'child':
+                num_child += 1
+        num_adult = len(self.classList) - num_child
+
+        data['path'] = self.imgInfo[1]
+        data['num_child'] = num_child
+        data['num_adult'] = num_adult
+        data['colored'] = self.imgInfo[2]
+        data['scene'] = self.imgInfo[3]
+        data['pet'] = self.imgInfo[4]
+        data['bbox'] = []
+        for i, point in enumerate(self.bboxList):
+            data['bbox'].append({
+                'id': i,
+                'x1': point[0],
+                'y1': point[1],
+                "x2": point[2],
+                "y2": point[3],
+                "class": self.classList[i],
+                "age_range": self.ageList[i],
+                "blanket": self.blanketList[i],
+                "face": self.faceList[i],
+                "size": self.sizeList[i]
+            })
+
+        imagename = self.imgInfo[0].split('.')[0]
+        self.dic_img[imagename] = data
+        print (self.dic_img)
+
+        self.imgInfo = []
+        print (self.cur, self.total)
+        if (self.cur + 1) < self.total:
             self.cur += 1
             self.loadImage()
+        else:
+            self.quit()
 
-    '''
-    def gotoImage(self):
-        idx = int(self.idxEntry.get())
-        if 1 <= idx and idx <= self.total:
-            self.saveImage()
-            self.cur = idx
-            self.loadImage()
-    '''
-
+    def quit(self):
+        if os.path.exists(self.labelfilename):
+            with open(self.labelfilename, 'r+') as outfile:
+                load_dic = json.load(outfile)
+                #load_dic[imagename] = data
+                json.dump(load_dic, outfile, indent = 4)
+        else:
+            with open(self.labelfilename, 'w') as outfile:
+                json.dump(self.dic_img, outfile, indent = 4)
 
 if __name__ == '__main__':
     root = Tk()
     tool = LabelTool(root)
     root.resizable(width =  True, height = True)
     root.mainloop()
+    # if root.destroy()
