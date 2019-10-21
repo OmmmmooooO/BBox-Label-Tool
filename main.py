@@ -4,6 +4,7 @@ from tkinter import messagebox
 from tkinter import ttk
 from tkinter import Toplevel
 from PIL import Image, ImageTk
+import datetime
 import os
 import glob
 import json
@@ -33,7 +34,7 @@ class LabelTool():
         self.outDir = ''
         self.cur = 0
         self.total = 0
-        self.category = 0
+        self.undone = 0
         self.imagename = ''
         self.labelfilename = ''
         self.tkimg = None
@@ -76,6 +77,8 @@ class LabelTool():
         self.svSourcePath.set(os.getcwd())
         self.entrySrc = Entry(self.frame, textvariable = self.svSourcePath)
         self.entrySrc.grid(row = 0, column = 1, columnspan=4, sticky = W+E)
+        self.saveBtn = Button(self.frame, text = 'Save & Exit', command = self.saveAndQuit, height = 3, width = 10)
+        self.saveBtn.grid(row = 2, column = 0)
         
         # [CENTRE PART]       
         ## main panel for labeling
@@ -145,14 +148,6 @@ class LabelTool():
 
         self.filenameLabel = Label(self.ctrPanel, text = "File name:")
         self.filenameLabel.pack(side = LEFT, padx = 5)
-        '''
-        self.tmpLabel = Label(self.ctrPanel, text = "Go to Image No.")
-        self.tmpLabel.pack(side = LEFT, padx = 5)
-        self.idxEntry = Entry(self.ctrPanel, width = 5)
-        self.idxEntry.pack(side = LEFT)
-        self.goBtn = Button(self.ctrPanel, text = 'Go', command = self.gotoImage)
-        self.goBtn.pack(side = LEFT)
-        '''
 
         # [RIGHT PART]
         ## showing bbox info & delete bbox
@@ -173,13 +168,13 @@ class LabelTool():
         self.bboxBtn.grid(row = 6, column = 5, rowspan = 2, sticky = W+N)
 
         ## button: Done and load next image
-        self.doneBtn = Button(self.frame, text = 'DONE', command = self.confirmPhoto, fg='red', height = 1, state = DISABLED)
-        self.doneBtn.grid(row = 9, column = 5, padx = (75, 0), sticky = W+N)
+        self.doneBtn = Button(self.frame, text = 'Image DONE', command = self.confirmPhoto, fg='red', height = 4, state = DISABLED)
+        self.doneBtn.grid(row = 10, column = 5, padx = 2, sticky = W+N)
 
         self.logLabel_1 = Label(self.frame, bg='tomato', width=20, height = 2, text='')
-        self.logLabel_1.grid(row = 10, column = 5, sticky = W+N)
+        self.logLabel_1.grid(row = 11, column = 5, sticky = W+N)
         self.logLabel_2 = Label(self.frame, bg='tomato', width=20, height = 2, text='')
-        self.logLabel_2.grid(row = 11, column = 5, sticky = W+N)
+        self.logLabel_2.grid(row = 12, column = 5, sticky = W+N)
 
         # display mouse position
         self.disp = Label(self.ctrPanel, text='')
@@ -193,13 +188,6 @@ class LabelTool():
         self.svSourcePath.set(path)
         self.loadDir()
         return
-
-    '''
-    def selectDesDir(self):
-        path = filedialog.askdirectory(title="Select label output folder", initialdir=self.svDestinationPath.get())
-        self.svDestinationPath.set(path)
-        return
-    '''
 
     def enableGUI(self):
         self.childBtn.config(state=NORMAL)
@@ -270,29 +258,31 @@ class LabelTool():
         self.total = len(self.imageList)
         self.imageList.sort()
 
-        #[Ryk]
-        #set up output dir the same as svSourcePath
-        #self.outDir = os.path.join(r'./Labels', '%03d' %(self.category))
-        self.outDir = self.svSourcePath.get()
-        print (self.svSourcePath.get())
+        # set up output label dir the same as svSourcePath
+        self.outDir = self.svSourcePath.get() + '/Labels'
         if not os.path.exists(self.outDir):
             os.mkdir(self.outDir)
 
         # load json file, compare images file list with json
         undoneList = []
-        self.labelfilename = self.imageDir + '/' + self.imageDir.split('/')[-1] + '.json'
-        if os.path.exists(self.labelfilename):
-            with open(self.labelfilename, 'r') as f:
-                data = json.load(f)
-                doneList = []
-                for i, j in enumerate(list(data.keys())):
-                    doneList.append(data[j]['path'])
-                undoneList = [i for i in self.imageList if not i in doneList or doneList.remove(i)]
-                self.imageList = undoneList
+        labeled_json = self.outDir + '/'
+        json_files = [pos_json for pos_json in os.listdir(labeled_json) if pos_json.endswith('.json')]
 
+        if len(json_files) > 0:
+            for i, name in enumerate(json_files):
+                self.labelfilename = self.outDir + '/' + name
+                with open(self.labelfilename, 'r') as f:
+                    data = json.load(f)
+                    doneList = []
+                    for t, k in enumerate(list(data.keys())):
+                        doneList.append(data[k]['path'])
+                    undoneList = [i for i in self.imageList if not i in doneList or doneList.remove(i)]
+                    self.imageList = undoneList
+
+        self.undone = len(self.imageList)
         self.loadImage()
         #self.loadLabel()
-        print('%d images loaded from %s' %(self.total, self.imageDir))
+        print('%d images loaded from %s, still %s undone' %(self.total, self.imageDir, self.undone))
 
     def loadImage(self):
         # load image & directory information
@@ -321,7 +311,7 @@ class LabelTool():
         self.tkimg = ImageTk.PhotoImage(self.img)
         self.mainPanel.config(width = max(self.tkimg.width(), PSIZE), height = max(self.tkimg.height(), PSIZE))
         self.mainPanel.create_image(0, 0, image = self.tkimg, anchor=NW)
-        self.progLabel.config(text = "%04d/%04d" %(self.cur, self.total))
+        self.progLabel.config(text = "%04d/%04d" %(self.cur, self.undone))
         self.area = self.tkimg.width() * self.tkimg.height()
         self.clearBBox()
 
@@ -365,7 +355,7 @@ class LabelTool():
 
     def nextImage(self, event = None):
         self.saveImage()
-        if self.cur < self.total:
+        if self.cur < self.undone:
             self.cur += 1
             self.loadImage()
 
@@ -594,20 +584,22 @@ class LabelTool():
         self.blanketList.append(infoCovered)
         self.logLabel_1.config(text = infoClass + '/' + infoAge)
         self.logLabel_2.config(text = infoFace + '/' + infoCovered)
-        print(self.imgInfo)
-        print(self.bboxList)
-        print(self.classList)
-        print(self.ageList)
-        print(self.faceList)
-        print(self.blanketList)
-        print(self.sizeList)
+
+        # debug
+        # print(self.imgInfo)
+        # print(self.bboxList)
+        # print(self.classList)
+        # print(self.ageList)
+        # print(self.faceList)
+        # print(self.blanketList)
+        # print(self.sizeList)
 
     #[Ryk] ToDo
     def updateImageDic(self):
         data = {}
         num_child = 0
         for i in range(len(self.classList)):
-            if self.classList[i] == 'child':
+            if self.classList[i] == 'Child':
                 num_child += 1
         num_adult = len(self.classList) - num_child
 
@@ -627,36 +619,30 @@ class LabelTool():
                 "y2": point[3],
                 "class": self.classList[i],
                 "age_range": self.ageList[i],
-                "blanket": self.blanketList[i],
                 "face": self.faceList[i],
+                "blanket": self.blanketList[i],
                 "size": self.sizeList[i]
             })
 
         imagename = self.imgInfo[0].split('.')[0]
         self.dic_img[imagename] = data
-        print (self.dic_img)
+        # print (self.dic_img)
 
         self.imgInfo = []
-        print (self.cur, self.total)
-        if (self.cur + 1) < self.total:
+        if (self.cur + 1) < self.undone:
+            print (self.cur, self.undone)
             self.cur += 1
             self.loadImage()
-        else:
-            self.quit()
 
-    def quit(self):
-        if os.path.exists(self.labelfilename):
-            with open(self.labelfilename, 'r+') as outfile:
-                load_dic = json.load(outfile)
-                #load_dic[imagename] = data
-                json.dump(load_dic, outfile, indent = 4)
-        else:
-            with open(self.labelfilename, 'w') as outfile:
-                json.dump(self.dic_img, outfile, indent = 4)
+    def saveAndQuit(self):
+        today = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+        self.labelfilename = self.outDir + '/' + today +  '.json'
+        with open(self.labelfilename, 'w') as outfile:
+            json.dump(self.dic_img, outfile, indent = 4)
+        root.destroy()
 
 if __name__ == '__main__':
     root = Tk()
     tool = LabelTool(root)
     root.resizable(width =  True, height = True)
     root.mainloop()
-    # if root.destroy()
