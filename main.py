@@ -32,6 +32,7 @@ class LabelTool():
         self.imageDir = ''
         self.imageList = []
         self.outDir = ''
+        self.count = 0
         self.cur = 0
         self.total = 0
         self.undone = 0
@@ -63,9 +64,6 @@ class LabelTool():
         self.faceList =[]
         self.sizeList = []
 
-        # reference to all images dic
-        self.dic_img = {}
-
         # ----------------- GUI stuff ---------------------
         # [UPPER PART]
         ## button: Image Folder
@@ -77,15 +75,15 @@ class LabelTool():
         self.svSourcePath.set(os.getcwd())
         self.entrySrc = Entry(self.frame, textvariable = self.svSourcePath)
         self.entrySrc.grid(row = 0, column = 1, columnspan=4, sticky = W+E)
-        self.saveBtn = Button(self.frame, text = 'Save & Exit', command = self.saveAndQuit, height = 3, width = 10)
-        self.saveBtn.grid(row = 2, column = 0)
+        # self.saveBtn = Button(self.frame, text = 'Save & Exit', command = self.saveAndQuit, height = 3, width = 10)
+        # self.saveBtn.grid(row = 2, column = 0)
         
         # [CENTRE PART]       
         ## main panel for labeling
         self.mainPanel = Canvas(self.frame, cursor = 'tcross')
         self.mainPanel.bind("<Button-1>", self.mouseClick)
         self.mainPanel.bind("<Motion>", self.mouseMove)
-        self.parent.bind("<Escape>", self.cancelBBox)  # press <Espace> to cancel current bbox
+        #self.parent.bind("<Escape>", self.cancelBBox)  # press <Espace> to cancel current bbox
         self.parent.bind("s", self.cancelBBox)
         self.parent.bind("p", self.prevImage) # press 'p' to go backforward
         self.parent.bind("n", self.nextImage) # press 'n' to go forward 
@@ -295,6 +293,8 @@ class LabelTool():
                 self.imgInfo.append(0)
             elif text == 'colored':
                 self.imgInfo.append(1)
+            elif text == 'crib':
+                self.imgInfo.append('crib')
             elif text == 'bedroom':
                 self.imgInfo.append('bedroom')
             elif text == 'livingroom':
@@ -460,8 +460,8 @@ class LabelTool():
             #self.center(self.popupWindow)
             self.popup_label.pack()
 
-            self.btn_popup1 = Button(self.popupWindow, text="OK", height=1, width=5, command=self.popup_ok)
-            self.btn_popup2 = Button(self.popupWindow, text="CANCLE", height=1, width=5, command=self.popup_cancle)
+            self.btn_popup1 = Button(self.popupWindow, text="OK", height=2, width=5, command=self.popup_ok)
+            self.btn_popup2 = Button(self.popupWindow, text="CANCLE", height=2, width=5, command=self.popup_cancle)
             self.btn_popup1.pack(side=RIGHT)
             self.btn_popup2.pack(side=LEFT)
 
@@ -478,8 +478,8 @@ class LabelTool():
             #self.center(self.popupWindow)
             self.popup_label.pack()
 
-            self.btn_popup1 = Button(self.popupWindow, text="OK", height=1, width=5, command=self.popup_ok)
-            self.btn_popup2 = Button(self.popupWindow, text="CANCLE", height=1, width=5, command=self.popup_cancle)
+            self.btn_popup1 = Button(self.popupWindow, text="OK", height=2, width=5, command=self.popup_ok)
+            self.btn_popup2 = Button(self.popupWindow, text="CANCLE", height=2, width=5, command=self.popup_cancle)
             self.btn_popup1.pack(side=RIGHT)
             self.btn_popup2.pack(side=LEFT)
 
@@ -544,7 +544,6 @@ class LabelTool():
         self.disableGUI()
 
     def updateBBoxList(self):
-        print (self.classname.get(), self.ages.get(),self.facedir.get(), self.covered.get())
         infoClass = ''
         textClass = self.classname.get()
         if textClass == '0':
@@ -596,6 +595,8 @@ class LabelTool():
 
     #[Ryk] ToDo
     def updateImageDic(self):
+        print(self.imgInfo)
+        img_dict = {}
         data = {}
         num_child = 0
         for i in range(len(self.classList)):
@@ -625,21 +626,28 @@ class LabelTool():
             })
 
         imagename = self.imgInfo[0].split('.')[0]
-        self.dic_img[imagename] = data
-        # print (self.dic_img)
+        img_dict[imagename] = data
+        # print (dic_img)
 
         self.imgInfo = []
-        if (self.cur + 1) < self.undone:
-            print (self.cur, self.undone)
-            self.cur += 1
+        self.cur += 1
+        self.count += 1
+        if self.count < self.undone:
+            print ('cur:', self.cur, 'count: ', self.count, 'undone: ', self.undone)
             self.loadImage()
+        else:
+            NORM_FONT = ("Helvetica", 10)
+            FinishWindow = Toplevel(self.parent)
+            FinishWindow.geometry("%dx%d" % (400, 200))
+            FinishLabel = Label(FinishWindow, text="Finish All Images", font=NORM_FONT)
+            FinishLabel.pack(side="top", fill="x", pady=10)
+            FinBtn = Button(FinishWindow, text="Okay", height=4, command = root.destroy)
+            FinBtn.pack()
 
-    def saveAndQuit(self):
-        today = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-        self.labelfilename = self.outDir + '/' + today +  '.json'
+        # today = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+        self.labelfilename = self.outDir + '/' + imagename +  '.json'
         with open(self.labelfilename, 'w') as outfile:
-            json.dump(self.dic_img, outfile, indent = 4)
-        root.destroy()
+            json.dump(img_dict, outfile, indent = 4)
 
 if __name__ == '__main__':
     root = Tk()
