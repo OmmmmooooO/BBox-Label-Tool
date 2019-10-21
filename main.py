@@ -211,8 +211,8 @@ class LabelTool():
         self.classname.set(None)
         self.ages.set(None)
         self.facedir.set(None)
-        self.covered.set(None)
-        print('classname=',self.classname.get())
+        self.covered.set('0')
+        print('self.covered=',self.covered.get())
         self.childBtn.config(state=DISABLED)
         self.adultBtn.config(state=DISABLED)
         self.age6mBtn.config(state=DISABLED)
@@ -246,9 +246,12 @@ class LabelTool():
     #[Ryk] ToDo
     #1. Update dictionary
     #2. Pop-up window
-    def confirmBBOX(self):
-        if self.classname.get() or self.ages.get() == None:
-            
+    def confirmBBOX(self):   
+        if self.classname.get()=='None' or self.ages.get()=='None' or self.facedir.get()=='None':
+            return
+        
+        self.popupWindowGen(popupWindowType='BBOX_OK')
+    
         textClass = self.classname.get()
         if textClass == '0':
             infoClass = 'Child'
@@ -281,7 +284,6 @@ class LabelTool():
             
         self.logLabel_1.config(text = infoClass + '/' + infoAge)
         self.logLabel_2.config(text = infoFace + '/' + infoCovered)
-        self.popupWindowGen(popupWindowType = 'BBOX_OK')
 
     #[Ryk] ToDo
     def updateDictionary(self):
@@ -292,26 +294,31 @@ class LabelTool():
     #2. Save dictionary to json file
     #3. Load next image
     def confirmPhoto(self):
-        self.popupWindowGen(popupWindowType = 'DONE')
+        if self.classname.get()=='None' or self.ages.get()=='None' or self.facedir.get()=='None':
+            return
+        self.popupWindowGen(popupWindowType='DONE')
 
     # create pop-up window
-    def popupWindowGen(self, popupWindowType = None):
+    def popupWindowGen(self, popupWindowType=None, okBtn=True):
         self.popupWindowFlag = 1
         # BBOX OK   
         if popupWindowType == 'BBOX_OK':
             self.popupWindow = Toplevel(self.parent)
             self.popupWindow.title("Sure?")
-            self.popup_label = Label(self.popupWindow,text="Label next bbox?", fg="black")
+            self.popup_label = Label(self.popupWindow, text="Label next bbox?", fg="black")
             #self.popup_label.config(width=20)
             #self.popup_label.config(font=("Courier", 14))
             self.popupWindow.geometry("%dx%d" % (400, 200))
             #self.center(self.popupWindow)
             self.popup_label.pack()
-        
+            
             self.btn_popup1 = Button(self.popupWindow, text="OK", height=1, width=5, command=self.popup_ok)
             self.btn_popup2 = Button(self.popupWindow, text="CANCLE", height=1, width=5, command=self.popup_cancle)
             self.btn_popup1.pack(side=RIGHT)
             self.btn_popup2.pack(side=LEFT)
+
+            if okBtn == False:
+                self.btn_popup1.config(state=DISABLED)
         # DONE
         elif popupWindowType == 'DONE':          
             self.popupWindow = Toplevel(self.parent)
@@ -323,10 +330,13 @@ class LabelTool():
             #self.center(self.popupWindow)
             self.popup_label.pack()
 
-            self.btn_popup1 = Button(self.popupWindow, text="OK", height=5, width=5, command=self.popup_ok)
-            self.btn_popup2 = Button(self.popupWindow, text="CANCLE", height=5, width=5, command=self.popup_cancle)
+            self.btn_popup1 = Button(self.popupWindow, text="OK", height=1, width=5, command=self.popup_ok)
+            self.btn_popup2 = Button(self.popupWindow, text="CANCLE", height=1, width=5, command=self.popup_cancle)
             self.btn_popup1.pack(side=RIGHT)
             self.btn_popup2.pack(side=LEFT)
+            
+            if okBtn == False:
+                self.btn_popup1.config(state=DISABLED)
         else:
             messagebox.showerror("Error!", message = "popup window error!")
 
