@@ -219,6 +219,42 @@ class LabelTool():
         self.bboxBtn.config(state=DISABLED)
         #self.doneBtn.config(state=DISABLED)
 
+    def enableBottomGUI(self):
+        self.childBtn.config(state=NORMAL)
+        self.adultBtn.config(state=NORMAL)
+        self.age6mBtn.config(state=NORMAL)
+        self.age12mBtn.config(state=NORMAL)
+        self.age6yrBtn.config(state=NORMAL)
+        self.age6upBtn.config(state=NORMAL)
+        self.fcfrontBtn.config(state=NORMAL)
+        self.fcsideBtn.config(state=NORMAL)
+        self.fcbackBtn.config(state=NORMAL)
+        self.coveredBtn.config(state=NORMAL)
+    
+    def enableRightGUI(self):
+        self.btnDel.config(state=NORMAL)
+        self.btnClear.config(state=NORMAL)
+        self.bboxBtn.config(state=NORMAL)
+        self.doneBtn.config(state=NORMAL)
+
+    def disableBottomGUI(self):
+        self.childBtn.config(state=DISABLED)
+        self.adultBtn.config(state=DISABLED)
+        self.age6mBtn.config(state=DISABLED)
+        self.age12mBtn.config(state=DISABLED)
+        self.age6yrBtn.config(state=DISABLED)
+        self.age6upBtn.config(state=DISABLED)
+        self.fcfrontBtn.config(state=DISABLED)
+        self.fcsideBtn.config(state=DISABLED)
+        self.fcbackBtn.config(state=DISABLED)
+        self.coveredBtn.config(state=DISABLED)
+
+    def disableRightGUI(self):
+        self.btnDel.config(state=DISABLED)
+        self.btnClear.config(state=DISABLED)
+        self.bboxBtn.config(state=DISABLED)
+        self.doneBtn.config(state=DISABLED)
+
     def setAge(self):
         print('age:', self.ages.get())
         return
