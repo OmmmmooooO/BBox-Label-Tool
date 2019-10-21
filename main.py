@@ -67,26 +67,6 @@ class LabelTool():
         self.entrySrc = Entry(self.frame, textvariable = self.svSourcePath)
         self.entrySrc.grid(row = 0, column = 1, columnspan=4, sticky = W+E)
         
-        ## button: Label Folder
-        '''
-        self.desDirBtn = Button(self.frame, text = "Label Folder", command = self.selectDesDir, width = 10)
-        self.desDirBtn.grid(row = 1, column = 0)
-        '''
-        
-        ## entry: output label dir
-        '''
-        self.svDestinationPath = StringVar()
-        self.entryDes = Entry(self.frame, textvariable = self.svDestinationPath)
-        self.entryDes.grid(row = 1, column = 1, columnspan=4, sticky = W+E)
-        self.svDestinationPath.set(os.path.join(os.getcwd(),"Labels"))
-        '''
-
-        ## button: Load Dir
-        '''
-        self.ldBtn = Button(self.frame, text = "Load Dir", command = self.loadDir)
-        self.ldBtn.grid(row = 0, column = 5, rowspan = 2, columnspan = 2, padx = 2, pady = 2, ipadx = 5, ipady = 5)
-        '''
-        
         # [CENTRE PART]       
         ## main panel for labeling
         self.mainPanel = Canvas(self.frame, cursor = 'tcross')
@@ -228,6 +208,11 @@ class LabelTool():
         self.doneBtn.config(state=NORMAL)
     
     def disableGUI(self):
+        self.classname.set(None)
+        self.ages.set(None)
+        self.facedir.set(None)
+        self.covered.set(None)
+        print('classname=',self.classname.get())
         self.childBtn.config(state=DISABLED)
         self.adultBtn.config(state=DISABLED)
         self.age6mBtn.config(state=DISABLED)
@@ -262,6 +247,8 @@ class LabelTool():
     #1. Update dictionary
     #2. Pop-up window
     def confirmBBOX(self):
+        if self.classname.get() or self.ages.get() == None:
+            
         textClass = self.classname.get()
         if textClass == '0':
             infoClass = 'Child'
@@ -303,7 +290,6 @@ class LabelTool():
     #[Ryk] ToDo
     #1. Update dictionary
     #2. Save dictionary to json file
-    #3. Pop-up window
     #3. Load next image
     def confirmPhoto(self):
         self.popupWindowGen(popupWindowType = 'DONE')
@@ -318,12 +304,12 @@ class LabelTool():
             self.popup_label = Label(self.popupWindow,text="Label next bbox?", fg="black")
             #self.popup_label.config(width=20)
             #self.popup_label.config(font=("Courier", 14))
-            self.popupWindow.geometry("%dx%d" % (200, 200))
+            self.popupWindow.geometry("%dx%d" % (400, 200))
             #self.center(self.popupWindow)
             self.popup_label.pack()
         
-            self.btn_popup1 = Button(self.popupWindow, text="OK", height=1, width=3, command=self.popup_ok)
-            self.btn_popup2 = Button(self.popupWindow, text="CANCLE", height=1, width=3, command=self.popup_cancle)
+            self.btn_popup1 = Button(self.popupWindow, text="OK", height=1, width=5, command=self.popup_ok)
+            self.btn_popup2 = Button(self.popupWindow, text="CANCLE", height=1, width=5, command=self.popup_cancle)
             self.btn_popup1.pack(side=RIGHT)
             self.btn_popup2.pack(side=LEFT)
         # DONE
@@ -333,10 +319,10 @@ class LabelTool():
             self.popup_label = Label(self.popupWindow,text="Save and load next image", fg="black")
             #self.popup_label.config(width=20)
             #self.popup_label.config(font=("Courier", 14))
-            self.popupWindow.geometry("%dx%d" % (200, 200))
+            self.popupWindow.geometry("%dx%d" % (400, 200))
             #self.center(self.popupWindow)
             self.popup_label.pack()
-        
+
             self.btn_popup1 = Button(self.popupWindow, text="OK", height=5, width=5, command=self.popup_ok)
             self.btn_popup2 = Button(self.popupWindow, text="CANCLE", height=5, width=5, command=self.popup_cancle)
             self.btn_popup1.pack(side=RIGHT)
@@ -345,17 +331,22 @@ class LabelTool():
             messagebox.showerror("Error!", message = "popup window error!")
 
 
-    #[Ryk] ToDo 
+    #[Ryk] ToDo
     def popup_ok(self):
         self.popupWindow.destroy()
         self.popupWindowFlag = 0
         self.disableGUI()
-        pass
+        self.updateDictionary()
+        '''
+        if popupWindowType == 'BBOX_OK':
+            #1. Save to json
+            #2. Load next image
+            pass    
+        '''
 
     def popup_cancle(self):
         self.popupWindow.destroy()
         self.popupWindowFlag = 0
-        pass
 
     def loadDir(self):
         self.parent.focus()
@@ -519,11 +510,6 @@ class LabelTool():
         self.bboxIdList = []
         self.bboxList = []
         self.disableGUI()
-
-    '''
-    def nextBBox(self):
-        pass  
-    '''
 
     def prevImage(self, event = None):
         self.saveImage()
