@@ -231,7 +231,7 @@ class LabelTool():
         self.btnDel.config(state=DISABLED)
         self.btnClear.config(state=DISABLED)
         self.bboxBtn.config(state=DISABLED)
-        self.doneBtn.config(state=DISABLED)
+        #self.doneBtn.config(state=DISABLED)
 
     def setAge(self):
         print('age:', self.ages.get())
