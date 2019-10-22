@@ -267,8 +267,13 @@ class LabelTool():
             messagebox.showerror("Error!", message = "The specified dir doesn't exist!")
             return
 
-        extlist = ["*.JPEG", "*.jpeg", "*JPG", "*.jpg", "*.PNG", "*.png", "*.BMP", "*.bmp"]
-        
+        windowtlist = ["*.JPEG", "*.JPG", "*.PNG", "*.BMP"]
+        otherOslist = ["*.JPEG", "*.jpeg", "*.JPG", "*.jpg", "*.PNG", "*.png", "*.BMP", "*.bmp"]
+        if platform.system() == 'Windows':
+            extlist = windowtlist
+        else:
+            extlist = otherOslist
+
         for e in extlist:
             filelist = glob.glob(os.path.join(self.imageDir, e))
             self.imageList.extend(filelist)
@@ -279,6 +284,7 @@ class LabelTool():
             return
 
         self.cur = 1
+        self.count = 1
         self.total = len(self.imageList)
         self.imageList.sort()
 
@@ -320,7 +326,7 @@ class LabelTool():
         if platform.system() == 'Windows':
             rawinfo = imagepath.split('/')[-1]
             nextlevel = rawinfo.split('\\')
-            basicinfo = nextlevel[0]
+            basicinfo = nextlevel[0].split('_')
         else:
             basicinfo = imagepath.split('/')[-2].split('_')
 
@@ -358,6 +364,7 @@ class LabelTool():
         self.imagename, _ = os.path.splitext(os.path.basename(imagepath))
         self.filenameLabel.config(text = "File name : %s" %(self.imagename))
         self.clearBBox()
+        print(self.imgInfo)
 
     # [NOT USE]
     def loadLabel(self):
@@ -642,8 +649,6 @@ class LabelTool():
     #[Ryk] ToDo
     def updateImageDic(self):
         print (">>>> updateImageDic")
-        print(self.imgInfo)
-
         img_dict = {}
         data = {}
         num_child = 0
@@ -674,21 +679,19 @@ class LabelTool():
             })
 
         img_dict[self.imagename] = data
+        self.labelfilename = self.outDir + '/' + self.imagename +  '.json'
+        with open(self.labelfilename, 'w') as outfile:
+            json.dump(img_dict, outfile, indent = 4)
+        print('Image No. %d saved' %(self.cur))
+        print ('cur:', self.cur, 'count: ', self.count, 'undone: ', self.undone)
 
         self.imgInfo = []
         self.cur += 1
         self.count += 1
         if self.count < self.undone:
-            print('Image No. %d saved' %(self.cur))
-            print ('cur:', self.cur, 'count: ', self.count, 'undone: ', self.undone)
             self.loadImage()
         else:
             self.labelFinished()
-
-        # today = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-        self.labelfilename = self.outDir + '/' + self.imagename +  '.json'
-        with open(self.labelfilename, 'w') as outfile:
-            json.dump(img_dict, outfile, indent = 4)
 
     def labelFinished(self):
         NORM_FONT = ("Helvetica", 10)
