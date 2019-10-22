@@ -10,9 +10,10 @@ import glob
 import json
 import random
 import utils
+import platform
 
 # colors for the bboxes
-COLORS = ['cyan', 'blue', 'red', 'orange', 'limegreen', 'hotpink', 'green', 'fuchsia',  'olive', 'darkviolet']
+COLORS = ['blue', 'red', 'cyan', 'orange', 'limegreen', 'hotpink', 'green', 'fuchsia',  'olive', 'darkviolet']
 # image sizes for the examples
 SIZE = 256, 256
 # panel size for init
@@ -54,7 +55,7 @@ class LabelTool():
         self.vl = None
 
         # reference to whole image information
-        # sve filename, path, colored, scene, pet, number of child, number of adult
+        # sve path, colored, scene, pet
         self.imgInfo = []
 
         # reference to bbox info
@@ -75,8 +76,6 @@ class LabelTool():
         self.svSourcePath.set(os.getcwd())
         self.entrySrc = Entry(self.frame, textvariable = self.svSourcePath)
         self.entrySrc.grid(row = 0, column = 1, columnspan=4, sticky = W+E)
-        # self.saveBtn = Button(self.frame, text = 'Save & Exit', command = self.saveAndQuit, height = 3, width = 10)
-        # self.saveBtn.grid(row = 2, column = 0)
         
         # [CENTRE PART]       
         ## main panel for labeling
@@ -84,9 +83,11 @@ class LabelTool():
         self.mainPanel.bind("<Button-1>", self.mouseClick)
         self.mainPanel.bind("<Motion>", self.mouseMove)
         #self.parent.bind("<Escape>", self.cancelBBox)  # press <Espace> to cancel current bbox
-        self.parent.bind("s", self.cancelBBox)
-        self.parent.bind("p", self.prevImage) # press 'p' to go backforward
-        self.parent.bind("n", self.nextImage) # press 'n' to go forward 
+        self.parent.bind("c", self.cancelBBox)
+        self.parent.bind("b", self.confirmBBOX) # press 'b' to confirm bounding box
+        self.parent.bind("s", self.confirmPhoto) # press 's' to confirm saveing photo
+        # self.parent.bind("p", self.prevImage) # press 'p' to go backforward
+        # self.parent.bind("n", self.nextImage) # press 'n' to go forward
         self.mainPanel.grid(row = 2, column = 1, rowspan = 4, columnspan = 4, sticky = W+E+N+S)
 
         ## radio button: Class
@@ -134,16 +135,8 @@ class LabelTool():
         ## control panel for image navigation
         self.ctrPanel = Frame(self.frame)
         self.ctrPanel.grid(row = 11, column = 1, columnspan = 4, sticky = W+E)
-        '''
-        self.prevBtn = Button(self.ctrPanel, text='<< Prev', width = 10, command = self.prevImage)
-        self.prevBtn.pack(side = LEFT, padx = 5, pady = 3)
-        
-        self.nextBtn = Button(self.ctrPanel, text='Next >>', width = 10, command = self.nextImage)
-        self.nextBtn.pack(side = LEFT, padx = 5, pady = 3)
-        '''
         self.progLabel = Label(self.ctrPanel, text = "Progress:     /    ")
         self.progLabel.pack(side = LEFT, padx = 5)
-
         self.filenameLabel = Label(self.ctrPanel, text = "File name:")
         self.filenameLabel.pack(side = LEFT, padx = 5)
 
@@ -151,23 +144,20 @@ class LabelTool():
         ## showing bbox info & delete bbox
         self.lb1 = Label(self.frame, text = 'Bounding boxes:')
         self.lb1.grid(row = 2, column = 5,  sticky = W+N)
-
         self.btnDel = Button(self.frame, text = 'Delete', width = 20, command = self.delBBox, state = DISABLED)
         self.btnDel.grid(row = 3, column = 5, sticky = W+N)
-
         self.btnClear = Button(self.frame, text = 'ClearAll', width = 20, command = self.clearBBox, state = DISABLED)
         self.btnClear.grid(row = 4, column = 5, sticky = W+N)
-        
-        self.listbox = Listbox(self.frame, width = 25, height = 20)
+        self.listbox = Listbox(self.frame, width = 25, height = 30)
         self.listbox.grid(row = 5, column = 5, sticky = W+N)
 
         ## button: Bbox ok
-        self.bboxBtn = Button(self.frame, text = 'BBOX OK', command = self.confirmBBOX, height = 4, state = DISABLED)
-        self.bboxBtn.grid(row = 6, column = 5, rowspan = 2, sticky = W+N)
-
-        ## button: Done and load next image
-        self.doneBtn = Button(self.frame, text = 'Image DONE', command = self.confirmPhoto, fg='red', height = 4, state = DISABLED)
-        self.doneBtn.grid(row = 10, column = 5, padx = 2, sticky = W+N)
+        self.BtnPanel = Frame(self.frame)
+        self.BtnPanel.grid(row = 7, column = 5, rowspan = 2, sticky = W+N)
+        self.bboxBtn = Button(self.BtnPanel, text = 'BBOX OK', command = self.confirmBBOX, height = 3, width = 10, state = DISABLED)
+        self.bboxBtn.pack(side = LEFT, padx = 5)
+        self.doneBtn = Button(self.BtnPanel, text = 'Image DONE', command = self.confirmPhoto, fg='red', height = 3, width = 12, state = DISABLED)
+        self.doneBtn.pack(side = LEFT, padx = 5)
 
         # self.logLabel_1 = Label(self.frame, bg='tomato', width=20, height = 2, text='')
         # self.logLabel_1.grid(row = 11, column = 5, sticky = W+N)
@@ -323,11 +313,17 @@ class LabelTool():
 
     def loadImage(self):
         # load image & directory information
-        print (self.cur, self.imageList[self.cur - 1])
+        # save 4 items: image path, colored, scene, pet
         imagepath = self.imageList[self.cur - 1]
-        self.imgInfo.append(imagepath.split('/')[-1])
         self.imgInfo.append(imagepath)
-        basicinfo = imagepath.split('/')[-2].split('_')
+
+        if platform.system() == 'Windows':
+            rawinfo = imagepath.split('/')[-1]
+            nextlevel = rawinfo.split('\\')
+            basicinfo = nextlevel[0]
+        else:
+            basicinfo = imagepath.split('/')[-2].split('_')
+
         for (i, text) in enumerate(basicinfo):
             if text == 'bw':
                 self.imgInfo.append(0)
@@ -593,6 +589,7 @@ class LabelTool():
         self.disableGUI()
 
     def updateBBoxList(self):
+        print (">>>> updateBBoxList")
         infoClass = ''
         textClass = self.classname.get()
         if textClass == '0':
@@ -644,7 +641,9 @@ class LabelTool():
 
     #[Ryk] ToDo
     def updateImageDic(self):
+        print (">>>> updateImageDic")
         print(self.imgInfo)
+
         img_dict = {}
         data = {}
         num_child = 0
@@ -653,12 +652,12 @@ class LabelTool():
                 num_child += 1
         num_adult = len(self.classList) - num_child
 
-        data['path'] = self.imgInfo[1]
+        data['path'] = self.imgInfo[0]
         data['num_child'] = num_child
         data['num_adult'] = num_adult
-        data['colored'] = self.imgInfo[2]
-        data['scene'] = self.imgInfo[3]
-        data['pet'] = self.imgInfo[4]
+        data['colored'] = self.imgInfo[1]
+        data['scene'] = self.imgInfo[2]
+        data['pet'] = self.imgInfo[3]
         data['bbox'] = []
         for i, point in enumerate(self.bboxList):
             data['bbox'].append({
@@ -674,9 +673,7 @@ class LabelTool():
                 "size": self.sizeList[i]
             })
 
-        imagename = self.imgInfo[0].split('.')[0]
-        img_dict[imagename] = data
-        # print (dic_img)
+        img_dict[self.imagename] = data
 
         self.imgInfo = []
         self.cur += 1
@@ -689,7 +686,7 @@ class LabelTool():
             self.labelFinished()
 
         # today = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-        self.labelfilename = self.outDir + '/' + imagename +  '.json'
+        self.labelfilename = self.outDir + '/' + self.imagename +  '.json'
         with open(self.labelfilename, 'w') as outfile:
             json.dump(img_dict, outfile, indent = 4)
 
