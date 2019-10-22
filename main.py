@@ -148,7 +148,7 @@ class LabelTool():
         self.btnDel.grid(row = 3, column = 5, sticky = W+N)
         self.btnClear = Button(self.frame, text = 'ClearAll', width = 20, command = self.clearBBox, state = DISABLED)
         self.btnClear.grid(row = 4, column = 5, sticky = W+N)
-        self.listbox = Listbox(self.frame, width = 25, height = 30)
+        self.listbox = Listbox(self.frame, width = 25, height = 25)
         self.listbox.grid(row = 5, column = 5, sticky = W+N)
 
         ## button: Bbox ok
