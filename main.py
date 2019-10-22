@@ -169,10 +169,10 @@ class LabelTool():
         self.doneBtn = Button(self.frame, text = 'Image DONE', command = self.confirmPhoto, fg='red', height = 4, state = DISABLED)
         self.doneBtn.grid(row = 10, column = 5, padx = 2, sticky = W+N)
 
-        self.logLabel_1 = Label(self.frame, bg='tomato', width=20, height = 2, text='')
-        self.logLabel_1.grid(row = 11, column = 5, sticky = W+N)
-        self.logLabel_2 = Label(self.frame, bg='tomato', width=20, height = 2, text='')
-        self.logLabel_2.grid(row = 12, column = 5, sticky = W+N)
+        # self.logLabel_1 = Label(self.frame, bg='tomato', width=20, height = 2, text='')
+        # self.logLabel_1.grid(row = 11, column = 5, sticky = W+N)
+        # self.logLabel_2 = Label(self.frame, bg='tomato', width=20, height = 2, text='')
+        # self.logLabel_2.grid(row = 12, column = 5, sticky = W+N)
 
         # display mouse position
         self.disp = Label(self.ctrPanel, text='')
@@ -288,7 +288,7 @@ class LabelTool():
             print('No images found in the specified dir!')
             return
 
-        self.cur = -1
+        self.cur = 1
         self.total = len(self.imageList)
         self.imageList.sort()
 
@@ -314,12 +314,16 @@ class LabelTool():
                     self.imageList = undoneList
 
         self.undone = len(self.imageList)
-        self.loadImage()
-        #self.loadLabel()
+        if self.undone == 0:
+            self.labelFinished()
+        else:
+            self.loadImage()
+            #self.loadLabel()
         print('%d images loaded from %s, still %s undone' %(self.total, self.imageDir, self.undone))
 
     def loadImage(self):
         # load image & directory information
+        print (self.cur, self.imageList[self.cur - 1])
         imagepath = self.imageList[self.cur - 1]
         self.imgInfo.append(imagepath.split('/')[-1])
         self.imgInfo.append(imagepath)
@@ -340,17 +344,26 @@ class LabelTool():
             elif text == 'pet':
                 self.imgInfo.append(1)
 
+        screen_width = root.winfo_screenwidth()
+        screen_height = root.winfo_screenheight()
+        max_width = screen_width * 0.7
+        max_height = screen_height * 0.7
         self.img = Image.open(imagepath)
         size = self.img.size
-        self.factor = max(size[0]/1000, size[1]/1000., 1.)
-        self.img = self.img.resize((int(size[0]/self.factor), int(size[1]/self.factor)))
+        self.factor = min(round(max_width/size[0], 2), round(max_height/size[1], 2))
+        self.img = self.img.resize((int(size[0]*self.factor), int(size[1]*self.factor)))
+        print ("Image fator: ", self.factor , " resize to: ",  self.img)
+
         self.tkimg = ImageTk.PhotoImage(self.img)
         self.mainPanel.config(width = max(self.tkimg.width(), PSIZE), height = max(self.tkimg.height(), PSIZE))
         self.mainPanel.create_image(0, 0, image = self.tkimg, anchor=NW)
         self.progLabel.config(text = "%04d/%04d" %(self.cur, self.undone))
         self.area = self.tkimg.width() * self.tkimg.height()
+        self.imagename, _ = os.path.splitext(os.path.basename(imagepath))
+        self.filenameLabel.config(text = "File name : %s" %(self.imagename))
         self.clearBBox()
 
+    # [NOT USE]
     def loadLabel(self):
         imagepath = self.imageList[self.cur - 1]
         fullfilename = os.path.basename(imagepath)
@@ -383,18 +396,21 @@ class LabelTool():
                     self.listbox.itemconfig(len(self.bboxIdList) - 1, fg = COLORS[color_index])
                     #self.listbox.itemconfig(len(self.bboxIdList) - 1, fg = COLORS[(len(self.bboxIdList) - 1) % len(COLORS)])
 
+    # [NOT USE]
     def prevImage(self, event = None):
         self.saveImage()
         if self.cur > 1:
             self.cur -= 1
             self.loadImage()
 
+    # [NOT USE]
     def nextImage(self, event = None):
         self.saveImage()
         if self.cur < self.undone:
             self.cur += 1
             self.loadImage()
 
+    # [NOT USE]
     def saveImage(self):
         if self.labelfilename == '':
             return
@@ -405,10 +421,8 @@ class LabelTool():
                                                 int(int(bbox[1])*self.factor),
                                                 int(int(bbox[2])*self.factor),
                                                 int(int(bbox[3])*self.factor), bbox[4]))
-                #f.write(' '.join(map(str, bbox)) + '\n')
         print('Image No. %d saved' %(self.cur))
 
-    #[Dollphis] define BBOX size
     def mouseClick(self, event):
         boxWidth = 0
         boxHeight = 0
@@ -443,7 +457,6 @@ class LabelTool():
                 self.sizeList.append('middle')
             else:
                 self.sizeList.append('large')
-
         self.STATE['click'] = 1 - self.STATE['click']
 
     def mouseMove(self, event):
@@ -617,8 +630,8 @@ class LabelTool():
         else:
             infoCovered = 'In blanket'
         self.blanketList.append(infoCovered)
-        self.logLabel_1.config(text = infoClass + '/' + infoAge)
-        self.logLabel_2.config(text = infoFace + '/' + infoCovered)
+        # self.logLabel_1.config(text = infoClass + '/' + infoAge)
+        # self.logLabel_2.config(text = infoFace + '/' + infoCovered)
 
         # debug
         # print(self.imgInfo)
@@ -669,21 +682,25 @@ class LabelTool():
         self.cur += 1
         self.count += 1
         if self.count < self.undone:
+            print('Image No. %d saved' %(self.cur))
             print ('cur:', self.cur, 'count: ', self.count, 'undone: ', self.undone)
             self.loadImage()
         else:
-            NORM_FONT = ("Helvetica", 10)
-            FinishWindow = Toplevel(self.parent)
-            FinishWindow.geometry("%dx%d" % (400, 200))
-            FinishLabel = Label(FinishWindow, text="Finish All Images", font=NORM_FONT)
-            FinishLabel.pack(side="top", fill="x", pady=10)
-            FinBtn = Button(FinishWindow, text="Okay", height=4, command = root.destroy)
-            FinBtn.pack()
+            self.labelFinished()
 
         # today = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
         self.labelfilename = self.outDir + '/' + imagename +  '.json'
         with open(self.labelfilename, 'w') as outfile:
             json.dump(img_dict, outfile, indent = 4)
+
+    def labelFinished(self):
+        NORM_FONT = ("Helvetica", 10)
+        FinishWindow = Toplevel(self.parent)
+        FinishWindow.geometry("%dx%d" % (400, 200))
+        FinishLabel = Label(FinishWindow, text="Finish All Images.", font=NORM_FONT)
+        FinishLabel.pack(side="top", fill="x", pady=10)
+        ExitBtn = Button(FinishWindow, text="Exit", height=4, command = root.destroy)
+        ExitBtn.pack()
 
 if __name__ == '__main__':
     root = Tk()
