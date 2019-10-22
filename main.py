@@ -667,10 +667,10 @@ class LabelTool():
         for i, point in enumerate(self.bboxList):
             data['bbox'].append({
                 'id': i,
-                'x1': int(point[0] * self.factor),
-                'y1': int(point[1] * self.factor) ,
-                "x2": int(point[2] * self.factor),
-                "y2": int(point[3] * self.factor),
+                'x1': int(point[0] / self.factor),
+                'y1': int(point[1] / self.factor) ,
+                "x2": int(point[2] / self.factor),
+                "y2": int(point[3] / self.factor),
                 "class": self.classList[i],
                 "age_range": self.ageList[i],
                 "face": self.faceList[i],
@@ -688,7 +688,7 @@ class LabelTool():
         self.imgInfo = []
         self.cur += 1
         self.count += 1
-        if self.count < self.undone:
+        if self.count <= self.undone:
             self.loadImage()
         else:
             self.labelFinished()
