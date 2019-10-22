@@ -207,7 +207,7 @@ class LabelTool():
         self.btnDel.config(state=DISABLED)
         self.btnClear.config(state=DISABLED)
         self.bboxBtn.config(state=DISABLED)
-        #self.doneBtn.config(state=DISABLED)
+        self.doneBtn.config(state=DISABLED)
 
     def enableBottomGUI(self):
         self.childBtn.config(state=NORMAL)
@@ -221,12 +221,6 @@ class LabelTool():
         self.fcbackBtn.config(state=NORMAL)
         self.coveredBtn.config(state=NORMAL)
     
-    def enableRightGUI(self):
-        self.btnDel.config(state=NORMAL)
-        self.btnClear.config(state=NORMAL)
-        self.bboxBtn.config(state=NORMAL)
-        self.doneBtn.config(state=NORMAL)
-
     def disableBottomGUI(self):
         self.childBtn.config(state=DISABLED)
         self.adultBtn.config(state=DISABLED)
@@ -238,12 +232,6 @@ class LabelTool():
         self.fcsideBtn.config(state=DISABLED)
         self.fcbackBtn.config(state=DISABLED)
         self.coveredBtn.config(state=DISABLED)
-
-    def disableRightGUI(self):
-        self.btnDel.config(state=DISABLED)
-        self.btnClear.config(state=DISABLED)
-        self.bboxBtn.config(state=DISABLED)
-        self.doneBtn.config(state=DISABLED)
 
     def setAge(self):
         print('age:', self.ages.get())
@@ -430,9 +418,12 @@ class LabelTool():
         boxWidth = 0
         boxHeight = 0
         if self.STATE['click'] == 0:
+            if self.childBtn['state'] == 'normal':
+                return
             self.STATE['x'], self.STATE['y'] = event.x, event.y
             self.disableGUI()
         else:
+            self.enableBottomGUI()
             x1, x2 = min(self.STATE['x'], event.x), max(self.STATE['x'], event.x)
             y1, y2 = min(self.STATE['y'], event.y), max(self.STATE['y'], event.y)
             self.bboxList.append((x1, y1, x2, y2))
@@ -472,6 +463,7 @@ class LabelTool():
                 self.mainPanel.delete(self.vl)
             self.vl = self.mainPanel.create_line(event.x, 0, event.x, self.tkimg.height(), width = 2)
         if 1 == self.STATE['click']:
+            #print('#####STATE_click = ', self.STATE['click'])
             if self.bboxId:
                 self.mainPanel.delete(self.bboxId)
             COLOR_INDEX = len(self.bboxIdList) % len(COLORS)
@@ -480,18 +472,11 @@ class LabelTool():
                                                             width = 2, \
                                                             outline = COLORS[len(self.bboxList) % len(COLORS)])
 
-    #[Ryk] ToDo
-    #1. Update dictionary
-    #2. Pop-up window
     def confirmBBOX(self):
-        if self.classname.get()=='None' or self.ages.get()=='None' or self.facedir.get()=='None':
+        if self.classname.get()=='None' or self.ages.get()=='None' or self.facedir.get()=='None' or len(self.bboxIdList) == 0:
             return
         self.popupWindowGen(popupWindowType='BBOX_OK')
 
-    #[Ryk] ToDo
-    #1. Update dictionary
-    #2. Save dictionary to json file
-    #3. Load next image
     def confirmPhoto(self):
         if self.classname.get()=='None' or self.ages.get()=='None' or self.facedir.get()=='None':
             return
@@ -540,11 +525,10 @@ class LabelTool():
         else:
             messagebox.showerror("Error!", message = "popup window error!")
 
-    #[Ryk] ToDo
     def popup_ok(self):
         self.popupWindow.destroy()
         self.popupWindowFlag = 0
-        self.disableGUI()
+        self.disableBottomGUI()
 
         if self.WindwType == 'BBOX_OK':
             self.updateBBoxList()
@@ -562,13 +546,12 @@ class LabelTool():
                 self.bboxId = None
                 self.STATE['click'] = 0
 
-    #[Ryk] ToDo
-    # if bbox == 0, then disable GUI
     def delBBox(self):
         # delete bbox only
         sel = self.listbox.curselection()
         if len(sel) != 1 :
             return
+        self.disableBottomGUI()
         idx = int(sel[0])
         self.mainPanel.delete(self.bboxIdList[idx])
         self.bboxIdList.pop(idx)
@@ -634,6 +617,28 @@ class LabelTool():
         else:
             infoCovered = 'In blanket'
         self.blanketList.append(infoCovered)
+
+        if (len(self.bboxList)>1) and (self.bboxList[-1]==self.bboxList[-2]):
+            self.mainPanel.delete(self.bboxIdList[-1])
+            self.bboxIdList.pop(-1)
+            self.bboxList.pop(-1)
+            self.listbox.delete(-1)
+            self.sizeList.pop(-1)
+
+            # delete bbox detail
+            self.classList.pop(-1)
+            self.ageList.pop(-1)
+            self.blanketList.pop(-1)
+            self.faceList.pop(-1)
+        
+        #e.g. draw a bbox -> Delete -> BBOX OK
+        if len(self.bboxList)!=len(self.classList):
+            # delete bbox detail
+            self.classList.pop(-1)
+            self.ageList.pop(-1)
+            self.blanketList.pop(-1)
+            self.faceList.pop(-1)
+
         # self.logLabel_1.config(text = infoClass + '/' + infoAge)
         # self.logLabel_2.config(text = infoFace + '/' + infoCovered)
 
