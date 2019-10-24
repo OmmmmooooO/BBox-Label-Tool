@@ -17,7 +17,7 @@ COLORS = ['blue', 'red', 'cyan', 'orange', 'limegreen', 'hotpink', 'green', 'fuc
 # image sizes for the examples
 SIZE = 256, 256
 # panel size for init
-PSIZE = 400
+PSIZE = 500
 
 class LabelTool():
     def __init__(self, master):
@@ -57,6 +57,10 @@ class LabelTool():
         # reference to whole image information
         # sve path, colored, scene, pet
         self.imgInfo = []
+        self.infoClass = ''
+        self.infoAge = ''
+        self.infoFace = ''
+        self.infoCovered = ''
 
         # reference to bbox info
         self.classList = []
@@ -84,57 +88,55 @@ class LabelTool():
         self.mainPanel.bind("<Motion>", self.mouseMove)
         #self.parent.bind("<Escape>", self.cancelBBox)  # press <Espace> to cancel current bbox
         self.parent.bind("c", self.cancelBBox)
-        self.parent.bind("b", self.confirmBBOX) # press 'b' to confirm bounding box
-        self.parent.bind("s", self.confirmPhoto) # press 's' to confirm saveing photo
         # self.parent.bind("p", self.prevImage) # press 'p' to go backforward
         # self.parent.bind("n", self.nextImage) # press 'n' to go forward
-        self.mainPanel.grid(row = 2, column = 1, rowspan = 4, columnspan = 4, sticky = W+E+N+S)
+        self.mainPanel.grid(row = 1, column = 1, rowspan = 4, columnspan = 4, sticky = W+E+N+S)
 
         ## radio button: Class
         self.classLb = Label(self.frame, text = 'Class:')
-        self.classLb.grid(row = 6, column = 1, padx = (0,60), sticky = N+E)
+        self.classLb.grid(row = 7, column = 1, padx = (0,60), sticky = N+E)
         self.classname = StringVar()
         self.classname.set(None)
         self.childBtn = Radiobutton(self.frame, text='Child', variable=self.classname, value='0', command = self.setClass, state = DISABLED)
-        self.childBtn.grid(row = 7, column = 1, padx = (0,50), sticky = N+E)
+        self.childBtn.grid(row = 8, column = 1, padx = (0,50), sticky = N+E)
         self.adultBtn = Radiobutton(self.frame, text='Adult', variable=self.classname, value='1', command = self.setClass, state = DISABLED)
-        self.adultBtn.grid(row = 8, column = 1, padx = (0,50), sticky = N+E)
+        self.adultBtn.grid(row = 9, column = 1, padx = (0,50), sticky = N+E)
 
         ## radio button: Age
         self.ageLb = Label(self.frame, text = 'Age:')
-        self.ageLb.grid(row = 6, column = 2, sticky = N+W)
+        self.ageLb.grid(row = 7, column = 2, sticky = N+W)
         self.ages = StringVar()
         self.ages.set(None)
         self.age6mBtn = Radiobutton(self.frame, text='0-6 month', variable=self.ages, value='0', command = self.setAge, state = DISABLED)
-        self.age6mBtn.grid(row = 7, column = 2, padx = (0,50), sticky = N+W)
+        self.age6mBtn.grid(row = 8, column = 2, padx = (0,50), sticky = N+W)
         self.age12mBtn = Radiobutton(self.frame, text='7-12 month', variable=self.ages, value='1', command = self.setAge, state = DISABLED)
-        self.age12mBtn.grid(row = 8, column = 2, padx = (0,50), sticky = N+W)
+        self.age12mBtn.grid(row = 9, column = 2, padx = (0,50), sticky = N+W)
         self.age6yrBtn = Radiobutton(self.frame, text='12m-6 years', variable=self.ages, value='2', command = self.setAge, state = DISABLED)
-        self.age6yrBtn.grid(row = 9, column = 2, padx = (0,50), sticky = N+W)
+        self.age6yrBtn.grid(row = 10, column = 2, padx = (0,50), sticky = N+W)
         self.age6upBtn = Radiobutton(self.frame, text='6 years up', variable=self.ages, value='3', command = self.setAge, state = DISABLED)
-        self.age6upBtn.grid(row = 10, column = 2, padx = (0,50), sticky = N+W)
+        self.age6upBtn.grid(row = 11, column = 2, padx = (0,50), sticky = N+W)
         
         ## radio button: Face direction
         self.fcLb = Label(self.frame, text = 'Face direction:')
-        self.fcLb.grid(row = 6, column = 3, padx = (0,40), sticky = N+W)
+        self.fcLb.grid(row = 7, column = 3, padx = (0,40), sticky = N+W)
         self.facedir = StringVar()
         self.facedir.set(None)
         self.fcfrontBtn = Radiobutton(self.frame, text='Front', variable=self.facedir, value='0', command = self.setFace, state = DISABLED)
-        self.fcfrontBtn.grid(row = 7, column = 3, padx = (0,50), sticky = N+W)
+        self.fcfrontBtn.grid(row = 8, column = 3, padx = (0,50), sticky = N+W)
         self.fcsideBtn = Radiobutton(self.frame, text='Side', variable=self.facedir, value='1', command = self.setFace, state = DISABLED)
-        self.fcsideBtn.grid(row = 8, column = 3, padx = (0,50), sticky = N+W)
+        self.fcsideBtn.grid(row = 9, column = 3, padx = (0,50), sticky = N+W)
         self.fcbackBtn = Radiobutton(self.frame, text='Back', variable=self.facedir, value='2', command = self.setFace, state = DISABLED)
-        self.fcbackBtn.grid(row = 9, column = 3, padx = (0,50), sticky = N+W)
+        self.fcbackBtn.grid(row = 10, column = 3, padx = (0,50), sticky = N+W)
 
         ## check button: In blanket
         self.covered = StringVar()
         self.covered.set(None)
         self.coveredBtn = Checkbutton(self.frame, text='In blanket', variable=self.covered, onvalue=1, offvalue=0, command = self.setCovered, state = DISABLED)
-        self.coveredBtn.grid(row = 6, column = 4, padx = (0,50), sticky = N+E)
+        self.coveredBtn.grid(row = 7, column = 4, padx = (0,50), sticky = N+E)
        
         ## control panel for image navigation
         self.ctrPanel = Frame(self.frame)
-        self.ctrPanel.grid(row = 11, column = 1, columnspan = 4, sticky = W+E)
+        self.ctrPanel.grid(row = 12, column = 1, columnspan = 4, sticky = W+E)
         self.progLabel = Label(self.ctrPanel, text = "Progress:     /    ")
         self.progLabel.pack(side = LEFT, padx = 5)
         self.filenameLabel = Label(self.ctrPanel, text = "File name:")
@@ -142,29 +144,24 @@ class LabelTool():
 
         # [RIGHT PART]
         ## showing bbox info & delete bbox
-        self.lb1 = Label(self.frame, text = 'Bounding boxes:')
-        self.lb1.grid(row = 2, column = 5,  sticky = W+N)
-        self.btnDel = Button(self.frame, text = 'Delete', width = 20, command = self.delBBox, state = DISABLED)
-        self.btnDel.grid(row = 3, column = 5, sticky = W+N)
-        self.btnClear = Button(self.frame, text = 'ClearAll', width = 20, command = self.clearBBox, state = DISABLED)
-        self.btnClear.grid(row = 4, column = 5, sticky = W+N)
-        self.listbox = Listbox(self.frame, width = 25, height = 25)
-        self.listbox.grid(row = 5, column = 5, sticky = W+N)
-
-        ## button: Bbox ok
         self.BtnPanel = Frame(self.frame)
-        self.BtnPanel.grid(row = 7, column = 5, rowspan = 2, sticky = W+N)
-        self.bboxBtn = Button(self.BtnPanel, text = 'BBOX OK', command = self.confirmBBOX, height = 3, width = 10, state = DISABLED)
-        self.bboxBtn.pack(side = LEFT, padx = 5)
-        self.doneBtn = Button(self.BtnPanel, text = 'Image DONE', command = self.confirmPhoto, fg='red', height = 3, width = 12, state = DISABLED)
-        self.doneBtn.pack(side = LEFT, padx = 5)
+        self.BtnPanel.grid(row = 1, column = 5, sticky = W+E+N+S)
+        self.lb1 = Label(self.BtnPanel, text = 'Bounding boxes:')
+        self.lb1.pack()
+        self.btnDel = Button(self.BtnPanel, text = 'Delete', width = 20, height = 2, command = self.delBBox, state = DISABLED)
+        self.btnDel.pack()
+        self.btnClear = Button(self.BtnPanel, text = 'ClearAll', width = 20, height = 2, command = self.clearBBox, state = DISABLED)
+        self.btnClear.pack()
+        self.listbox = Listbox(self.BtnPanel, width = 25, height = 25)
+        self.listbox.pack()
+        self.noObjBtn = Button(self.BtnPanel, text = 'NO Objects', width = 20, height = 3, command = self.confirmNoObjPhoto)
+        self.noObjBtn.pack()
+        self.bboxBtn = Button(self.BtnPanel, text = 'BBOX OK', width = 20, height = 3, command = self.confirmBBOX, state = DISABLED)
+        self.bboxBtn.pack()
+        self.doneBtn = Button(self.BtnPanel, text = 'Image DONE', width = 20, height = 3, command = self.confirmPhoto, fg='red', state = DISABLED)
+        self.doneBtn.pack()
 
-        # self.logLabel_1 = Label(self.frame, bg='tomato', width=20, height = 2, text='')
-        # self.logLabel_1.grid(row = 11, column = 5, sticky = W+N)
-        # self.logLabel_2 = Label(self.frame, bg='tomato', width=20, height = 2, text='')
-        # self.logLabel_2.grid(row = 12, column = 5, sticky = W+N)
-
-        # display mouse position
+         # display mouse position
         self.disp = Label(self.ctrPanel, text='')
         self.disp.pack(side = RIGHT)
 
@@ -192,7 +189,7 @@ class LabelTool():
         self.btnClear.config(state=NORMAL)
         self.bboxBtn.config(state=NORMAL)
         self.doneBtn.config(state=NORMAL)
-    
+
     def disableGUI(self):
         self.childBtn.config(state=DISABLED)
         self.adultBtn.config(state=DISABLED)
@@ -233,19 +230,39 @@ class LabelTool():
         self.fcbackBtn.config(state=DISABLED)
         self.coveredBtn.config(state=DISABLED)
 
+    def setClass(self):
+        if self.classname.get() == '0':
+            self.infoClass = 'Child'
+        else:
+            self.infoClass = 'Adult'
+        print('set class:', self.classname.get(), ' is ', self.infoClass)
+
     def setAge(self):
-        print('age:', self.ages.get())
-        return
+        if self.ages.get() == '0':
+            self.infoAge = '0-6 month'
+        elif self.ages.get() == '1':
+            self.infoAge = '7-12 month'
+        elif self.ages.get() == '2':
+            self.infoAge = '1-6 years old'
+        else:
+            self.infoAge = '6 years up'
+        print('set age:', self.ages.get(), ' is ', self.infoAge)
 
     def setFace(self):
-        print('face direction:', self.facedir.get())
+        if self.facedir.get() == '0':
+            self.infoFace = 'Front'
+        elif self.facedir.get() == '1':
+            self.infoFace = 'Side'
+        else:
+            self.infoFace = 'Back'
+        print('set face direction:', self.facedir.get(), ' is ', self.infoFace)
 
     def setCovered(self):
-        print('covered:', self.covered.get())
-        return
-
-    def setClass(self):
-        print('set label class:', self.classname.get())
+        if self.covered.get() == '0':
+            self.infoCovered = 'No blanket'
+        else:
+            self.infoCovered = 'In blanket'
+        print('set covered:', self.covered.get(), ' is ', self.infoCovered)
 
     def loadDir(self):
         self.parent.focus()
@@ -463,7 +480,6 @@ class LabelTool():
                 self.mainPanel.delete(self.vl)
             self.vl = self.mainPanel.create_line(event.x, 0, event.x, self.tkimg.height(), width = 2)
         if 1 == self.STATE['click']:
-            #print('#####STATE_click = ', self.STATE['click'])
             if self.bboxId:
                 self.mainPanel.delete(self.bboxId)
             COLOR_INDEX = len(self.bboxIdList) % len(COLORS)
@@ -475,6 +491,11 @@ class LabelTool():
     def confirmBBOX(self):
         if self.classname.get()=='None' or self.ages.get()=='None' or self.facedir.get()=='None' or len(self.bboxIdList) == 0:
             return
+        if self.classname.get() == '1' and self.ages.get() != '3':
+            self.popupWindowGen(popupWindowType='AGE')
+            return
+        if self.covered.get() == 'None': #prevent initial no value'
+            self.infoCovered = 'No blanket'
         self.popupWindowGen(popupWindowType='BBOX_OK')
 
     def confirmPhoto(self):
@@ -482,46 +503,64 @@ class LabelTool():
             return
         self.popupWindowGen(popupWindowType='DONE')
 
+    def confirmNoObjPhoto(self):
+        self.popupWindowGen(popupWindowType='NO_OBJ')
+
     # create pop-up window
     def popupWindowGen(self, popupWindowType=None, okBtn=True):
         self.popupWindowFlag = 1
 
         self.WindwType = popupWindowType
         if self.WindwType == 'BBOX_OK':
+            self.bboxBtn.config(state=DISABLED)
             self.popupWindow = Toplevel(self.parent)
             self.popupWindow.title("Sure?")
-            self.popup_label = Label(self.popupWindow, text="Label next bbox?", fg="black")
-            #self.popup_label.config(width=20)
-            #self.popup_label.config(font=("Courier", 14))
-            self.popupWindow.geometry("%dx%d" % (400, 200))
-            #self.center(self.popupWindow)
-            self.popup_label.pack()
+
+            self.bboxInfoOne = Label(self.popupWindow, bg='tomato', width=20, height = 3, text='')
+            self.bboxInfoOne.grid(row = 0, column = 0, sticky = W+E)
+            self.bboxInfoOne.config(text = self.infoClass + '/' + self.infoAge, font=("Courier", 20), fg='white')
+            self.bboxInfoTwo = Label(self.popupWindow, bg='tomato', width=20, height = 3, text='')
+            self.bboxInfoTwo.grid(row = 1, column = 0, sticky = W+E)
+            self.bboxInfoTwo.config(text = self.infoFace + '/' + self.infoCovered, font=("Courier", 20), fg='white')
+            self.popup_label = Label(self.popupWindow, text="Confirmed & Label next bbox?", font=("Courier", 15), fg="black")
+            self.popup_label.grid(row = 2, column = 0, sticky = W+E)
 
             self.btn_popup1 = Button(self.popupWindow, text="OK", height=2, width=5, command=self.popup_ok)
             self.btn_popup2 = Button(self.popupWindow, text="CANCLE", height=2, width=5, command=self.popup_cancle)
-            self.btn_popup1.pack(side=RIGHT)
-            self.btn_popup2.pack(side=LEFT)
-
+            self.btn_popup1.grid(row = 3, column = 1, sticky = W+E)
+            self.btn_popup2.grid(row = 3, column = 0, sticky = W+E)
             if okBtn == False:
                 self.btn_popup1.config(state=DISABLED)
-        # DONE
+
         elif self.WindwType == 'DONE':
+            self.doneBtn.config(state=DISABLED)
             self.popupWindow = Toplevel(self.parent)
             self.popupWindow.title("Sure?")
             self.popup_label = Label(self.popupWindow,text="Save and load next image", fg="black")
-            #self.popup_label.config(width=20)
-            #self.popup_label.config(font=("Courier", 14))
             self.popupWindow.geometry("%dx%d" % (400, 200))
-            #self.center(self.popupWindow)
             self.popup_label.pack()
-
             self.btn_popup1 = Button(self.popupWindow, text="OK", height=2, width=5, command=self.popup_ok)
             self.btn_popup2 = Button(self.popupWindow, text="CANCLE", height=2, width=5, command=self.popup_cancle)
             self.btn_popup1.pack(side=RIGHT)
             self.btn_popup2.pack(side=LEFT)
-
             if okBtn == False:
                 self.btn_popup1.config(state=DISABLED)
+
+        elif self.WindwType == 'NO_OBJ':
+            self.noObjBtn.config(state=DISABLED)
+            self.popupWindow = Toplevel(self.parent)
+            self.popupWindow.title("Sure?")
+            self.bboxInfoOne = Label(self.popupWindow, bg='tomato', width=20, height = 3, text='')
+            self.bboxInfoOne.grid(row = 0, column = 0, sticky = W+E)
+            self.bboxInfoOne.config(text = "NO Objects?", font=("Courier", 20), fg='white')
+            self.btn_popup1 = Button(self.popupWindow, text="OK", height=2, width=5, command=self.popup_ok)
+            self.btn_popup2 = Button(self.popupWindow, text="CANCLE", height=2, width=5, command=self.popup_cancle)
+            self.btn_popup1.grid(row = 3, column = 1, sticky = W+E)
+            self.btn_popup2.grid(row = 3, column = 0, sticky = W+E)
+
+        elif self.WindwType == 'AGE':
+            messagebox.showerror("Error!", message = "Age error!")
+
         else:
             messagebox.showerror("Error!", message = "popup window error!")
 
@@ -533,6 +572,7 @@ class LabelTool():
         if self.WindwType == 'BBOX_OK':
             self.updateBBoxList()
         else:
+            self.noObjBtn.config(state=NORMAL)
             self.updateImageDic()
 
     def popup_cancle(self):
@@ -580,43 +620,10 @@ class LabelTool():
 
     def updateBBoxList(self):
         print (">>>> updateBBoxList")
-        infoClass = ''
-        textClass = self.classname.get()
-        if textClass == '0':
-            infoClass = 'Child'
-        else:
-            infoClass = 'Adult'
-        self.classList.append(infoClass)
-
-        infoAge = ''
-        textAge = self.ages.get()
-        if textAge == '0':
-            infoAge = '0-6 month'
-        elif textAge == '1':
-            infoAge = '7-12 month'
-        elif textAge == '2':
-            infoAge = '1-6 years old'
-        else:
-            infoAge = '6 years up'
-        self.ageList.append(infoAge)
-
-        infoFace = ''
-        textFace = self.facedir.get()
-        if textFace == '0':
-            infoFace = 'Front'
-        elif textFace == '1':
-            infoFace = 'Side'
-        else:
-            infoFace = 'Back'
-        self.faceList.append(infoFace)
-
-        infoCovered = ''
-        textCovered = self.covered.get()
-        if textCovered == '0':
-            infoCovered = 'No blanket'
-        else:
-            infoCovered = 'In blanket'
-        self.blanketList.append(infoCovered)
+        self.classList.append(self.infoClass)
+        self.ageList.append(self.infoAge)
+        self.faceList.append(self.infoFace)
+        self.blanketList.append(self.infoCovered)
 
         if (len(self.bboxList)>1) and (self.bboxList[-1]==self.bboxList[-2]):
             self.mainPanel.delete(self.bboxIdList[-1])
@@ -639,17 +646,14 @@ class LabelTool():
             self.blanketList.pop(-1)
             self.faceList.pop(-1)
 
-        # self.logLabel_1.config(text = infoClass + '/' + infoAge)
-        # self.logLabel_2.config(text = infoFace + '/' + infoCovered)
-
         # debug
-        # print(self.imgInfo)
-        # print(self.bboxList)
-        # print(self.classList)
-        # print(self.ageList)
-        # print(self.faceList)
-        # print(self.blanketList)
-        # print(self.sizeList)
+        print(self.imgInfo)
+        print(self.bboxList)
+        print(self.classList)
+        print(self.ageList)
+        print(self.faceList)
+        print(self.blanketList)
+        print(self.sizeList)
 
     #[Ryk] ToDo
     def updateImageDic(self):
@@ -668,20 +672,22 @@ class LabelTool():
         data['colored'] = self.imgInfo[1]
         data['scene'] = self.imgInfo[2]
         data['pet'] = self.imgInfo[3]
-        data['bbox'] = []
-        for i, point in enumerate(self.bboxList):
-            data['bbox'].append({
-                'id': i,
-                'x1': int(point[0] / self.factor),
-                'y1': int(point[1] / self.factor) ,
-                "x2": int(point[2] / self.factor),
-                "y2": int(point[3] / self.factor),
-                "class": self.classList[i],
-                "age_range": self.ageList[i],
-                "face": self.faceList[i],
-                "blanket": self.blanketList[i],
-                "size": self.sizeList[i]
-            })
+
+        if len(self.bboxList) > 0:
+            data['bbox'] = []
+            for i, point in enumerate(self.bboxList):
+                data['bbox'].append({
+                    'id': i,
+                    'x1': int(point[0] / self.factor),
+                    'y1': int(point[1] / self.factor) ,
+                    "x2": int(point[2] / self.factor),
+                    "y2": int(point[3] / self.factor),
+                    "class": self.classList[i],
+                    "age_range": self.ageList[i],
+                    "face": self.faceList[i],
+                    "blanket": self.blanketList[i],
+                    "size": self.sizeList[i]
+                })
 
         img_dict[self.imagename] = data
         self.labelfilename = self.outDir + '/' + self.imagename +  '.json'
