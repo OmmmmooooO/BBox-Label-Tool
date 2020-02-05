@@ -3,12 +3,13 @@ from tkinter import filedialog
 from tkinter import messagebox
 from tkinter import ttk
 from tkinter import Toplevel
-from PIL import Image, ImageTk
+from PIL import Image, ImageTk, ImageEnhance
 import datetime
 import os
 import glob
 import json
 import random
+import utils
 import platform
 
 # colors for the bboxes
@@ -27,6 +28,7 @@ class LabelTool():
         self.frame.pack(fill=BOTH, expand=1)
         self.parent.resizable(width = FALSE, height = FALSE)
         self.area = 0
+        self.loadLabelOnly = 0
 
         # initialize global state
         self.imageDir = ''
@@ -47,163 +49,158 @@ class LabelTool():
         self.STATE['x'], self.STATE['y'] = 0, 0
 
         # reference to bbox
+        self.classIdList = []
         self.bboxIdList = []
         self.bboxId = None
         self.bboxList = []
         self.hl = None
         self.vl = None
 
-        # reference to whole image information
-        # sve path, colored, scene, pet
+        # reference to image and bbox info, "info" set default value
         self.imgInfo = []
-        self.infoClass = ''
-        self.infoAge = ''
-        self.infoFace = ''
-        self.infoCovered = ''
-
-        # reference to bbox info
+        self.infoClass = 'Child'
+        self.infoAge = '0-6 month'
+        self.infoCovered = 'No Blanket'
+        self.infoBodyLean = 'No Lean'
+        self.infoBodyTwisted = 'No Twisted'
+        self.infoBodyOverlap = 'No Overlap'
         self.classList = []
         self.ageList = []
+        self.leanList = []
+        self.twistList = []
         self.blanketList = []
-        self.faceList =[]
+        self.overlapList = []
         self.sizeList = []
 
-        # ----------------- GUI stuff ---------------------
-        # [UPPER PART]
-        ## button: Image Folder
-        self.srcDirBtn = Button(self.frame, text = "Image Folder", command = self.selectSrcDir, width = 10)
-        self.srcDirBtn.grid(row = 0, column = 0)
 
-        ## entry: input image dir
+        # ----------------- GUI stuff ---------------------
+        # >>>>>> [UPPER PART] <<<<<<<
+        # button: Load Unlabel Images
+        # button: Load Labeled Images
+        self.srcDirBtn = Button(self.frame, text = "Un-Label", command = self.selectSrcDir, width = 10)
+        self.srcDirBtn.grid(row = 0, column = 0)
         self.svSourcePath = StringVar()
         self.svSourcePath.set(os.getcwd())
-        self.entrySrc = Entry(self.frame, textvariable = self.svSourcePath)
-        self.entrySrc.grid(row = 0, column = 1, columnspan=4, sticky = W+E)
+        self.entrySrcDir = Entry(self.frame, textvariable = self.svSourcePath)
+        self.entrySrcDir.grid(row = 0, column = 1, columnspan=4, sticky = W+E)
 
-        # [CENTRE PART]
-        ## main panel for labeling
+        self.srcLoadBtn = Button(self.frame, text = "Labeled", command = self.selectLoadDir, width = 10)
+        self.srcLoadBtn.grid(row = 1, column = 0)
+        self.svLoadPath = StringVar()
+        self.svLoadPath.set(os.getcwd())
+        self.entryLoadDir = Entry(self.frame, textvariable = self.svLoadPath)
+        self.entryLoadDir.grid(row = 1, column = 1, columnspan=4, sticky = W+E)
+
+
+        # >>>>>> [CENTRE PART] <<<<<<<
+        # main panel for labeling
         self.mainPanel = Canvas(self.frame, cursor = 'tcross')
         self.mainPanel.bind("<Button-1>", self.mouseClick)
         self.mainPanel.bind("<Motion>", self.mouseMove)
-        #self.parent.bind("<Escape>", self.cancelBBox)  # press <Espace> to cancel current bbox
-        self.parent.bind("c", self.cancelBBox)
-        # self.parent.bind("p", self.prevImage) # press 'p' to go backforward
-        # self.parent.bind("n", self.nextImage) # press 'n' to go forward
-        self.mainPanel.grid(row = 1, column = 1, rowspan = 4, columnspan = 4, sticky = W+E+N+S)
+        self.parent.bind("<Escape>", self.cancelBBox)
+        self.parent.bind("p", self.prevImage) # press 'p' to go backforward
+        self.parent.bind("n", self.nextImage) # press 'n' to go forward
+        self.mainPanel.grid(row = 2, column = 1, rowspan = 4, columnspan = 4, sticky = W+E+N+S)
 
-        ## radio button: Class
-        self.classLb = Label(self.frame, text = 'Class:')
-        self.classLb.grid(row = 7, column = 1, padx = (0,60), sticky = N+E)
+
+        # >>>>>> [RIGHT PART] <<<<<<<
+        # radio button: Class
+        self.BtnPanel = Frame(self.frame)
+        self.BtnPanel.grid(row = 2, column = 5, sticky = W+N)
+        self.classLb = Label(self.BtnPanel, text = 'Class:')
+        self.classLb.pack(anchor=NW)
         self.classname = StringVar()
         self.classname.set(None)
-        self.childBtn = Radiobutton(self.frame, text='Child', variable=self.classname, value='0', command = self.setClass, state = DISABLED)
-        self.childBtn.grid(row = 8, column = 1, padx = (0,50), sticky = N+E)
-        self.adultBtn = Radiobutton(self.frame, text='Adult', variable=self.classname, value='1', command = self.setClass, state = DISABLED)
-        self.adultBtn.grid(row = 9, column = 1, padx = (0,50), sticky = N+E)
+        self.childBtn = Radiobutton(self.BtnPanel, text='Child', variable=self.classname, value='0', command = self.setClass, state = DISABLED)
+        self.childBtn.pack(padx=10, pady=2,anchor=NW)
+        self.adultBtn = Radiobutton(self.BtnPanel, text='Adult', variable=self.classname, value='1', command = self.setClass, state = DISABLED)
+        self.adultBtn.pack(padx=10, anchor=NW)
 
-        ## radio button: Age
-        self.ageLb = Label(self.frame, text = 'Age:')
-        self.ageLb.grid(row = 7, column = 2, sticky = N+W)
+        # radio button: Age
+        self.ageLb = Label(self.BtnPanel, text = 'Age:')
+        self.ageLb.pack(anchor=NW)
         self.ages = StringVar()
         self.ages.set(None)
-        self.age6mBtn = Radiobutton(self.frame, text='0-6 month', variable=self.ages, value='0', command = self.setAge, state = DISABLED)
-        self.age6mBtn.grid(row = 8, column = 2, padx = (0,50), sticky = N+W)
-        self.age12mBtn = Radiobutton(self.frame, text='7-12 month', variable=self.ages, value='1', command = self.setAge, state = DISABLED)
-        self.age12mBtn.grid(row = 9, column = 2, padx = (0,50), sticky = N+W)
-        self.age6yrBtn = Radiobutton(self.frame, text='12m-6 years', variable=self.ages, value='2', command = self.setAge, state = DISABLED)
-        self.age6yrBtn.grid(row = 10, column = 2, padx = (0,50), sticky = N+W)
-        self.age6upBtn = Radiobutton(self.frame, text='6 years up', variable=self.ages, value='3', command = self.setAge, state = DISABLED)
-        self.age6upBtn.grid(row = 11, column = 2, padx = (0,50), sticky = N+W)
+        self.age6mBtn = Radiobutton(self.BtnPanel, text='0-6 month', variable=self.ages, value='0', command = self.setAge, state = DISABLED)
+        self.age6mBtn.pack(padx=10, pady=2, anchor=NW)
+        self.age12mBtn = Radiobutton(self.BtnPanel, text='7-12 month', variable=self.ages, value='1', command = self.setAge, state = DISABLED)
+        self.age12mBtn.pack(padx=10, pady=2, anchor=NW)
+        self.age6yrBtn = Radiobutton(self.BtnPanel, text='12m-6 years', variable=self.ages, value='2', command = self.setAge, state = DISABLED)
+        self.age6yrBtn.pack(padx=10, pady=2, anchor=NW)
+        self.age6upBtn = Radiobutton(self.BtnPanel, text='6 years up', variable=self.ages, value='3', command = self.setAge, state = DISABLED)
+        self.age6upBtn.pack(padx=10, pady=2, anchor=NW)
 
-        ## radio button: Face direction
-        self.fcLb = Label(self.frame, text = 'Face direction:')
-        self.fcLb.grid(row = 7, column = 3, padx = (0,40), sticky = N+W)
-        self.facedir = StringVar()
-        self.facedir.set(None)
-        self.fcfrontBtn = Radiobutton(self.frame, text='Front', variable=self.facedir, value='0', command = self.setFace, state = DISABLED)
-        self.fcfrontBtn.grid(row = 8, column = 3, padx = (0,50), sticky = N+W)
-        self.fcsideBtn = Radiobutton(self.frame, text='Side', variable=self.facedir, value='1', command = self.setFace, state = DISABLED)
-        self.fcsideBtn.grid(row = 9, column = 3, padx = (0,50), sticky = N+W)
-        self.fcbackBtn = Radiobutton(self.frame, text='Back', variable=self.facedir, value='2', command = self.setFace, state = DISABLED)
-        self.fcbackBtn.grid(row = 10, column = 3, padx = (0,50), sticky = N+W)
-
-        ## check button: In blanket
+        # check button: In blanket / People overlap / People Lean / People Twisted
+        self.bodylean = StringVar()
+        self.bodylean.set(None)
+        self.bodyleanBtn = Checkbutton(self.BtnPanel, text='is Body Lean?', variable=self.bodylean, onvalue=1, offvalue=0, command = self.setBodyLean, state = DISABLED)
+        self.bodyleanBtn.pack(anchor=NW)
+        self.twisted = StringVar()
+        self.twisted.set(None)
+        self.twistedBtn = Checkbutton(self.BtnPanel, text='is Body Twisted?', variable=self.twisted, onvalue=1, offvalue=0, command = self.setBodyTwisted, state = DISABLED)
+        self.twistedBtn.pack(anchor=NW)
         self.covered = StringVar()
         self.covered.set(None)
-        self.coveredBtn = Checkbutton(self.frame, text='In blanket', variable=self.covered, onvalue=1, offvalue=0, command = self.setCovered, state = DISABLED)
-        self.coveredBtn.grid(row = 7, column = 4, padx = (0,50), sticky = N+E)
+        self.coveredBtn = Checkbutton(self.BtnPanel, text='is Baby in Blanket?', variable=self.covered, onvalue=1, offvalue=0, command = self.setBabyCovered, state = DISABLED)
+        self.coveredBtn.pack(anchor=NW)
+        self.overlap = StringVar()
+        self.overlap.set(None)
+        self.overlapBtn = Checkbutton(self.BtnPanel, text='been Covered or Overlap?', variable=self.overlap, onvalue=1, offvalue=0, command = self.setBodyOverLap, state = DISABLED)
+        self.overlapBtn.pack(anchor=NW)
 
-        ## control panel for image navigation
-        self.ctrPanel = Frame(self.frame)
-        self.ctrPanel.grid(row = 12, column = 1, columnspan = 4, sticky = W+E)
-        self.progLabel = Label(self.ctrPanel, text = "Progress:     /    ")
-        self.progLabel.pack(side = LEFT, padx = 5)
-        self.filenameLabel = Label(self.ctrPanel, text = "File name:")
-        self.filenameLabel.pack(side = LEFT, padx = 5)
-
-        # [RIGHT PART]
-        ## showing bbox info & delete bbox
-        self.BtnPanel = Frame(self.frame)
-        self.BtnPanel.grid(row = 1, column = 5, sticky = W+E+N+S)
-        self.lb1 = Label(self.BtnPanel, text = 'Bounding boxes:')
-        self.lb1.pack()
-        self.btnDel = Button(self.BtnPanel, text = 'Delete', width = 20, height = 2, command = self.delBBox, state = DISABLED)
-        self.btnDel.pack()
-        self.btnClear = Button(self.BtnPanel, text = 'ClearAll', width = 20, height = 2, command = self.clearBBox, state = DISABLED)
-        self.btnClear.pack()
-        self.listbox = Listbox(self.BtnPanel, width = 25, height = 25)
-        self.listbox.pack()
-        self.noObjBtn = Button(self.BtnPanel, text = 'NO Objects', width = 20, height = 3, command = self.confirmNoObjPhoto)
-        self.noObjBtn.pack()
-        self.bboxBtn = Button(self.BtnPanel, text = 'BBOX OK', width = 20, height = 3, command = self.confirmBBOX, state = DISABLED)
+        # bounding boxes parts
+        self.bboxBtn = Button(self.BtnPanel, text = 'BBOX OK', width = 20, height = 4, command = self.confirmBBOX, state = DISABLED)
         self.bboxBtn.pack()
-        self.doneBtn = Button(self.BtnPanel, text = 'Image DONE', width = 20, height = 3, command = self.confirmPhoto, fg='red', state = DISABLED)
+        self.listbox = Listbox(self.BtnPanel, width = 25, height = 10)
+        self.listbox.pack()
+        self.btnDel = Button(self.BtnPanel, text = 'Delete Box', width = 20, height = 2, command = self.delBBox, state = DISABLED)
+        self.btnDel.pack()
+        self.btnClear = Button(self.BtnPanel, text = 'Clear All', width = 20, height = 2, command = self.clearBBox, state = DISABLED)
+        self.btnClear.pack()
+        self.noObjBtn = Button(self.BtnPanel, text = 'NO Objects', width = 20, height = 2, command = self.confirmNoObjPhoto)
+        self.noObjBtn.pack()
+        self.doneBtn = Button(self.BtnPanel, text = 'Image DONE', width = 20, height = 5, command = self.confirmPhoto, fg='red', state = DISABLED)
         self.doneBtn.pack()
 
-         # display mouse position
-        self.disp = Label(self.ctrPanel, text='')
-        self.disp.pack(side = RIGHT)
+        # >>>>>> [BOTTOM PART] <<<<<<<
+        # control panel for image navigation
+        self.progLabel = Label(self.frame, text = "Progress:     /    ")
+        self.progLabel.grid(row = 10, column = 0, sticky = W+N)
+        self.filenameLabel = Label(self.frame, text = "File name:")
+        self.filenameLabel.grid(row = 10, column = 1, sticky = W+N)
+        self.prevBtn = Button(self.frame, text='<< Prev', width = 10, command = self.prevImage, state = DISABLED)
+        self.prevBtn.grid(row = 10, column = 2, sticky = W+N)
+        self.nextBtn = Button(self.frame, text='Next >>', width = 10, command = self.nextImage, state = DISABLED)
+        self.nextBtn.grid(row = 10, column = 3, sticky = W+N)
+        self.deLabelBtn = Button(self.frame, text='Delete-Label', width = 10, command = self.deleteLabel, state = DISABLED)
+        self.deLabelBtn.grid(row = 10, column = 4, sticky = W+N)
+        self.disp = Label(self.frame, text='')
+        self.disp.grid(row = 10, column = 5, sticky = E+N)
 
         self.frame.columnconfigure(1, weight = 1)
         self.frame.rowconfigure(4, weight = 1)
 
-    def selectSrcDir(self):
-        path = filedialog.askdirectory(title="Select image source folder", initialdir=self.svSourcePath.get())
-        self.svSourcePath.set(path)
-        self.loadDir()
-        return
 
-    def enableGUI(self):
-        self.childBtn.config(state=NORMAL)
-        self.adultBtn.config(state=NORMAL)
-        self.age6mBtn.config(state=NORMAL)
-        self.age12mBtn.config(state=NORMAL)
-        self.age6yrBtn.config(state=NORMAL)
-        self.age6upBtn.config(state=NORMAL)
-        self.fcfrontBtn.config(state=NORMAL)
-        self.fcsideBtn.config(state=NORMAL)
-        self.fcbackBtn.config(state=NORMAL)
-        self.coveredBtn.config(state=NORMAL)
+    # [Control GUI]
+    def resetBtnValue(self):
+        self.classname.set('0')
+        self.ages.set('0')
+        self.bodylean.set('0')
+        self.twisted.set('0')
+        self.covered.set('0')
+        self.overlap.set('0')
+        self.setClass()
+        self.setAge()
+        self.setBodyLean()
+        self.setBodyTwisted()
+        self.setBabyCovered()
+        self.setBodyOverLap()
+
+    def enableControlGUI(self):
         self.btnDel.config(state=NORMAL)
         self.btnClear.config(state=NORMAL)
-        self.bboxBtn.config(state=NORMAL)
         self.doneBtn.config(state=NORMAL)
-
-    def disableGUI(self):
-        self.childBtn.config(state=DISABLED)
-        self.adultBtn.config(state=DISABLED)
-        self.age6mBtn.config(state=DISABLED)
-        self.age12mBtn.config(state=DISABLED)
-        self.age6yrBtn.config(state=DISABLED)
-        self.age6upBtn.config(state=DISABLED)
-        self.fcfrontBtn.config(state=DISABLED)
-        self.fcsideBtn.config(state=DISABLED)
-        self.fcbackBtn.config(state=DISABLED)
-        self.coveredBtn.config(state=DISABLED)
-        self.btnDel.config(state=DISABLED)
-        self.btnClear.config(state=DISABLED)
-        self.bboxBtn.config(state=DISABLED)
-        self.doneBtn.config(state=DISABLED)
+        self.noObjBtn.config(state=DISABLED)
 
     def enableBottomGUI(self):
         self.childBtn.config(state=NORMAL)
@@ -212,10 +209,10 @@ class LabelTool():
         self.age12mBtn.config(state=NORMAL)
         self.age6yrBtn.config(state=NORMAL)
         self.age6upBtn.config(state=NORMAL)
-        self.fcfrontBtn.config(state=NORMAL)
-        self.fcsideBtn.config(state=NORMAL)
-        self.fcbackBtn.config(state=NORMAL)
         self.coveredBtn.config(state=NORMAL)
+        self.overlapBtn.config(state=NORMAL)
+        self.bodyleanBtn.config(state=NORMAL)
+        self.twistedBtn.config(state=NORMAL)
 
     def disableBottomGUI(self):
         self.childBtn.config(state=DISABLED)
@@ -224,46 +221,134 @@ class LabelTool():
         self.age12mBtn.config(state=DISABLED)
         self.age6yrBtn.config(state=DISABLED)
         self.age6upBtn.config(state=DISABLED)
-        self.fcfrontBtn.config(state=DISABLED)
-        self.fcsideBtn.config(state=DISABLED)
-        self.fcbackBtn.config(state=DISABLED)
         self.coveredBtn.config(state=DISABLED)
+        self.overlapBtn.config(state=DISABLED)
+        self.bodyleanBtn.config(state=DISABLED)
+        self.twistedBtn.config(state=DISABLED)
 
+    def initStateGUI(self):
+        self.childBtn.config(state=DISABLED)
+        self.adultBtn.config(state=DISABLED)
+        self.age6mBtn.config(state=DISABLED)
+        self.age12mBtn.config(state=DISABLED)
+        self.age6yrBtn.config(state=DISABLED)
+        self.age6upBtn.config(state=DISABLED)
+        self.coveredBtn.config(state=DISABLED)
+        self.overlapBtn.config(state=DISABLED)
+        self.bodyleanBtn.config(state=DISABLED)
+        self.twistedBtn.config(state=DISABLED)
+        self.btnDel.config(state=DISABLED)
+        self.btnClear.config(state=DISABLED)
+        self.bboxBtn.config(state=DISABLED)
+        self.doneBtn.config(state=DISABLED)
+        self.prevBtn.config(state=DISABLED)
+        self.nextBtn.config(state=DISABLED)
+        self.deLabelBtn.config(state=DISABLED)
+
+    def disableAllGUI(self):
+        self.childBtn.config(state=DISABLED)
+        self.adultBtn.config(state=DISABLED)
+        self.age6mBtn.config(state=DISABLED)
+        self.age12mBtn.config(state=DISABLED)
+        self.age6yrBtn.config(state=DISABLED)
+        self.age6upBtn.config(state=DISABLED)
+        self.coveredBtn.config(state=DISABLED)
+        self.overlapBtn.config(state=DISABLED)
+        self.bodyleanBtn.config(state=DISABLED)
+        self.twistedBtn.config(state=DISABLED)
+        self.btnDel.config(state=DISABLED)
+        self.btnClear.config(state=DISABLED)
+        self.noObjBtn.config(state=DISABLED)
+        self.bboxBtn.config(state=DISABLED)
+        self.doneBtn.config(state=DISABLED)
+        self.prevBtn.config(state=DISABLED)
+        self.nextBtn.config(state=DISABLED)
+        self.deLabelBtn.config(state=DISABLED)
+
+    def previewImageLabelGUI(self):
+        self.childBtn.config(state=DISABLED)
+        self.adultBtn.config(state=DISABLED)
+        self.age6mBtn.config(state=DISABLED)
+        self.age12mBtn.config(state=DISABLED)
+        self.age6yrBtn.config(state=DISABLED)
+        self.age6upBtn.config(state=DISABLED)
+        self.coveredBtn.config(state=DISABLED)
+        self.overlapBtn.config(state=DISABLED)
+        self.bodyleanBtn.config(state=DISABLED)
+        self.twistedBtn.config(state=DISABLED)
+        self.btnDel.config(state=DISABLED)
+        self.btnClear.config(state=DISABLED)
+        self.noObjBtn.config(state=DISABLED)
+        self.bboxBtn.config(state=DISABLED)
+        self.doneBtn.config(state=DISABLED)
+        self.prevBtn.config(state=NORMAL)
+        self.nextBtn.config(state=NORMAL)
+        self.deLabelBtn.config(state=NORMAL)
+
+    # [Button Funcion]
     def setClass(self):
         if self.classname.get() == '0':
             self.infoClass = 'Child'
+            self.age6mBtn.config(state=NORMAL)
+            self.age12mBtn.config(state=NORMAL)
+            self.age6yrBtn.config(state=NORMAL)
+            self.age6upBtn.config(state=DISABLED)
         else:
             self.infoClass = 'Adult'
-        print('set class:', self.classname.get(), ' is ', self.infoClass)
+            self.ages.set('3')
+            self.infoAge = '6 years up'
+            self.age6mBtn.config(state=DISABLED)
+            self.age12mBtn.config(state=DISABLED)
+            self.age6yrBtn.config(state=DISABLED)
+            self.age6upBtn.config(state=NORMAL)
 
     def setAge(self):
         if self.ages.get() == '0':
             self.infoAge = '0-6 month'
         elif self.ages.get() == '1':
             self.infoAge = '7-12 month'
-        elif self.ages.get() == '2':
+        else:
             self.infoAge = '1-6 years old'
-        else:
-            self.infoAge = '6 years up'
-        print('set age:', self.ages.get(), ' is ', self.infoAge)
 
-    def setFace(self):
-        if self.facedir.get() == '0':
-            self.infoFace = 'Front'
-        elif self.facedir.get() == '1':
-            self.infoFace = 'Side'
+    def setBodyLean(self):
+        if self.bodylean.get() == '0':
+            self.infoBodyLean = 'No Lean'
         else:
-            self.infoFace = 'Back'
-        print('set face direction:', self.facedir.get(), ' is ', self.infoFace)
+            self.infoBodyLean = 'Lean'
 
-    def setCovered(self):
+    def setBodyTwisted(self):
+        if self.twisted.get() == '0':
+            self.infoBodyTwisted = 'No Twisted'
+        else:
+            self.infoBodyTwisted = 'Twisted'
+
+    def setBodyOverLap(self):
+        if self.overlap.get() == '0':
+            self.infoBodyOverlap = 'No Overlap(Covered)'
+        else:
+            self.infoBodyOverlap = 'Overlap(Covered)' 
+
+    def setBabyCovered(self):
         if self.covered.get() == '0':
             self.infoCovered = 'No blanket'
         else:
             self.infoCovered = 'In blanket'
-        print('set covered:', self.covered.get(), ' is ', self.infoCovered)
 
-    def loadDir(self):
+    # [Load Image]
+    def selectSrcDir(self):
+        path = filedialog.askdirectory(title="Select image source folder", initialdir=self.svSourcePath.get())
+        self.svSourcePath.set(path)
+        self.loadUnLabelImg()
+        return
+
+    def selectLoadDir(self):
+        path = filedialog.askdirectory(title="Select image source folder", initialdir=self.svLoadPath.get())
+        self.svLoadPath.set(path)
+        self.loadLabeledImg()
+        return
+
+    def loadUnLabelImg(self):
+        self.loadLabelOnly = 0
         self.parent.focus()
         self.imageDir = self.svSourcePath.get()
         self.imageList = []
@@ -281,12 +366,12 @@ class LabelTool():
         for e in extlist:
             filelist = glob.glob(os.path.join(self.imageDir, e))
             self.imageList.extend(filelist)
-            print(type(self.imageList),type(filelist))
 
         if len(self.imageList) == 0:
             print('No images found in the specified dir!')
             return
 
+        # count total before deduction done list
         self.cur = 1
         self.count = 1
         self.total = len(self.imageList)
@@ -311,14 +396,66 @@ class LabelTool():
             undoneList = [i for i in self.imageList if not i in doneList or doneList.remove(i)]
             self.imageList = undoneList
 
-
         self.undone = len(self.imageList)
         if self.undone == 0:
             self.labelFinished()
         else:
             self.loadImage()
-            #self.loadLabel()
         print('%d images loaded from %s, still %s undone' %(self.total, self.imageDir, self.undone))
+
+    def loadLabeledImg(self):
+        self.loadLabelOnly = 1
+        self.parent.focus()
+        self.imageDir = self.svLoadPath.get()
+        self.imageList = []
+        if not os.path.isdir(self.imageDir):
+            messagebox.showerror("Error!", message = "The specified dir doesn't exist!")
+            return
+
+        windowtlist = ["*.JPEG", "*.JPG", "*.PNG", "*.BMP"]
+        otherOslist = ["*.JPEG", "*.jpeg", "*.JPG", "*.jpg", "*.PNG", "*.png", "*.BMP", "*.bmp"]
+        if platform.system() == 'Windows':
+            extlist = windowtlist
+        else:
+            extlist = otherOslist
+
+        for e in extlist:
+            filelist = glob.glob(os.path.join(self.imageDir, e))
+            self.imageList.extend(filelist)
+
+        if len(self.imageList) == 0:
+            messagebox.showerror("Error!", message = "No images found in the specified dir!")
+            return
+
+        # count total before deduction done list
+        self.cur = 1
+        self.count = 1
+        self.total = len(self.imageList)
+        self.imageList.sort()
+
+        # set up output label dir the same as svSourcePath
+        self.outDir = self.svLoadPath.get() + '/Labels'
+        if not os.path.exists(self.outDir):
+            messagebox.showerror("Error!", message = "No Labels!")
+            return
+
+        # load json file, compare images file list with json
+        doneList = []
+        labeled_json = self.outDir + '/'
+        json_files = [pos_json for pos_json in os.listdir(labeled_json) if pos_json.endswith('.json')]
+        if len(json_files) > 0:
+            for i, name in enumerate(json_files):
+                for j, full in enumerate(self.imageList):
+                    if name.split('.')[0] in full:
+                        doneList.append(full)
+
+        if len(doneList) == 0:
+            messagebox.showerror("Error!", message = "No images has been labeled!")
+            return
+        self.imageList = doneList
+        self.loadImage()
+        self.loadLabel()
+        self.previewImageLabelGUI()
 
     def loadImage(self):
         # load image & directory information
@@ -351,109 +488,102 @@ class LabelTool():
 
         screen_width = root.winfo_screenwidth()
         screen_height = root.winfo_screenheight()
-        max_width = screen_width * 0.7
-        max_height = screen_height * 0.7
-        self.img = Image.open(imagepath)
+        max_width = screen_width * 0.6
+        max_height = screen_height * 0.6
+        rawimg = Image.open(imagepath)
+        self.img =ImageEnhance.Brightness(rawimg).enhance(1.2)
+
         size = self.img.size
-        long_side = 800
-
-        if (size[0] or size[1]) < long_side:
-            if size[0] >= size[1]:
-                self.factor = long_side / size[0]
-                self.img = self.img.resize((long_side, int(size[1]*self.factor)))
-            else:
-                self.factor = long_side / size[1]
-                self.img = self.img.resize((int(size[0]*self.factor), long_side))
-        else:
-            if size[0] >= size[1]:
-                self.factor = long_side / size[0]
-                self.img = self.img.resize((long_side, int(size[1]*self.factor)))
-            else:
-                self.factor = long_side / size[1]
-                self.img = self.img.resize((int(size[0]*self.factor), long_side))
-
-        #self.factor = min(round(max_width/size[0], 2), round(max_height/size[1], 2))
-        #self.img = self.img.resize((int(size[0]*self.factor), int(size[1]*self.factor)))
-        print ("Image fator: ", self.factor , " resize to: ",  (self.img.size[0], self.img.size[1]))
-
+        self.factor = min(round(max_width/size[0], 2), round(max_height/size[1], 2))
+        self.img = self.img.resize((int(size[0]*self.factor), int(size[1]*self.factor)))
         self.tkimg = ImageTk.PhotoImage(self.img)
         self.mainPanel.config(width = max(self.tkimg.width(), PSIZE), height = max(self.tkimg.height(), PSIZE))
         self.mainPanel.create_image(0, 0, image = self.tkimg, anchor=NW)
-        self.progLabel.config(text = "%04d/%04d" %(self.cur, self.undone))
+
+        if self.loadLabelOnly == 1:
+            self.progLabel.config(text = "%04d/%04d" %(self.cur, len(self.imageList)))
+        else:
+            self.progLabel.config(text = "%04d/%04d" %(self.cur, self.undone))
         self.area = self.tkimg.width() * self.tkimg.height()
         self.imagename, _ = os.path.splitext(os.path.basename(imagepath))
         self.filenameLabel.config(text = "File name : %s" %(self.imagename))
         self.clearBBox()
-        print(self.imgInfo)
 
-    # [NOT USE]
     def loadLabel(self):
         imagepath = self.imageList[self.cur - 1]
         fullfilename = os.path.basename(imagepath)
         self.imagename, _ = os.path.splitext(fullfilename)
         self.filenameLabel.config(text = "File name : %s" %(self.imagename))
-        labelname = self.imagename + '.txt'
-        self.labelfilename = os.path.join(self.outDir, labelname)
-        bbox_cnt = 0
-        if os.path.exists(self.labelfilename):
-            with open(self.labelfilename) as f:
-                for (i, line) in enumerate(f):
-                    if i == 0:
-                        bbox_cnt = int(line.strip())
-                        continue
-                    tmp = [int(t.strip()) for t in line.split()]
-                    tmp = line.split()
-                    tmp[0] = int(int(tmp[0])/self.factor)
-                    tmp[1] = int(int(tmp[1])/self.factor)
-                    tmp[2] = int(int(tmp[2])/self.factor)
-                    tmp[3] = int(int(tmp[3])/self.factor)
-                    self.bboxList.append(tuple(tmp))
-                    color_index = (len(self.bboxList)-1) % len(COLORS)
-                    tmpId = self.mainPanel.create_rectangle(tmp[0], tmp[1], \
-                                                            tmp[2], tmp[3], \
-                                                            width = 2, \
-                                                            outline = COLORS[color_index])
-                                                            #outline = COLORS[(len(self.bboxList)-1) % len(COLORS)])
-                    self.bboxIdList.append(tmpId)
-                    self.listbox.insert(END, '(%d, %d) -> (%d, %d)' %(tmp[0], tmp[1], tmp[2], tmp[3]))
-                    self.listbox.itemconfig(len(self.bboxIdList) - 1, fg = COLORS[color_index])
-                    #self.listbox.itemconfig(len(self.bboxIdList) - 1, fg = COLORS[(len(self.bboxIdList) - 1) % len(COLORS)])
 
-    # [NOT USE]
+        LabelFile = self.svLoadPath.get() + '/Labels/' + self.imagename + '.json'
+        bbox_cnt = 0
+        tmp = [0,0,0,0, '']
+        with open(LabelFile, 'r') as f:
+            data = json.load(f)
+            if 'bbox' not in data[self.imagename].keys():
+                self.mainPanel.create_text(300, 400, font=("Arial", 18), fill='black', text="No Object image. Skip")
+                return
+
+            bbox_cnt = len(data[self.imagename]['bbox'])
+            for i in range(bbox_cnt):
+                tmp[0] = data[self.imagename]['bbox'][i]['x1']
+                tmp[1] = data[self.imagename]['bbox'][i]['y1']
+                tmp[2] = data[self.imagename]['bbox'][i]['x2']
+                tmp[3] = data[self.imagename]['bbox'][i]['y2']
+                tmp[4] = data[self.imagename]['bbox'][i]['class']
+
+                tmp[0] = int(int(tmp[0])*self.factor)
+                tmp[1] = int(int(tmp[1])*self.factor)
+                tmp[2] = int(int(tmp[2])*self.factor)
+                tmp[3] = int(int(tmp[3])*self.factor)
+                self.bboxList.append(tuple(tmp))
+                color_index = (len(self.bboxList)-1) % len(COLORS)
+                tmpId = self.mainPanel.create_rectangle(tmp[0], tmp[1], \
+                                                        tmp[2], tmp[3], \
+                                                        width = 2, \
+                                                        outline = COLORS[color_index])
+                classId = self.mainPanel.create_text(tmp[0] + 40, tmp[1] + 10, font=("Arial", 14), fill=COLORS[color_index], text=tmp[4])
+                self.classIdList.append(classId)
+                self.bboxIdList.append(tmpId)
+                self.listbox.insert(END, '(%d, %d) -> (%d, %d)' %(tmp[0], tmp[1], tmp[2], tmp[3]))
+                self.listbox.itemconfig(len(self.bboxIdList) - 1, fg = COLORS[color_index])
+
     def prevImage(self, event = None):
-        self.saveImage()
         if self.cur > 1:
             self.cur -= 1
             self.loadImage()
+            self.loadLabel()
 
-    # [NOT USE]
     def nextImage(self, event = None):
-        self.saveImage()
-        if self.cur < self.undone:
+        if self.cur < len(self.imageList):
             self.cur += 1
             self.loadImage()
+            self.loadLabel()
 
-    # [NOT USE]
-    def saveImage(self):
-        if self.labelfilename == '':
-            return
-        with open(self.labelfilename, 'w') as f:
-            f.write('%d\n' %len(self.bboxList))
-            for bbox in self.bboxList:
-                f.write("{} {} {} {} {}\n".format(int(int(bbox[0])*self.factor),
-                                                int(int(bbox[1])*self.factor),
-                                                int(int(bbox[2])*self.factor),
-                                                int(int(bbox[3])*self.factor), bbox[4]))
-        print('Image No. %d saved' %(self.cur))
+    def deleteLabel(self):
+        for idx in range(len(self.bboxIdList)):
+            self.mainPanel.delete(self.bboxIdList[idx])
+        for idx in range(len(self.classIdList)):
+            self.mainPanel.delete(self.classIdList[idx])
+        self.listbox.delete(0, len(self.bboxList))
+        pointx = int(root.winfo_screenwidth() * 0.6 * 0.5) - 50
+        pointy = int(root.winfo_screenheight() * 0.6 * 0.5)
+        self.mainPanel.create_text(pointx, pointy, font=("Arial", 40), fill='blue', text="Label has been deleted!!")
+        LabelFile = self.svLoadPath.get() + '/Labels/' + self.imagename + '.json'
+        os.remove(LabelFile)
+        print('Image No. %s Label has been deleted.' %(self.imagename))
 
     def mouseClick(self, event):
         boxWidth = 0
         boxHeight = 0
+
+        if self.loadLabelOnly == 1:
+            return
         if self.STATE['click'] == 0:
             if self.childBtn['state'] == 'normal':
                 return
             self.STATE['x'], self.STATE['y'] = event.x, event.y
-            self.disableGUI()
+            self.initStateGUI()
         else:
             self.enableBottomGUI()
             x1, x2 = min(self.STATE['x'], event.x), max(self.STATE['x'], event.x)
@@ -463,7 +593,8 @@ class LabelTool():
             self.bboxId = None
             self.listbox.insert(END, '(%d, %d) -> (%d, %d)' %(x1, y1, x2, y2))
             self.listbox.itemconfig(len(self.bboxIdList) - 1, fg = COLORS[(len(self.bboxIdList) - 1) % len(COLORS)])
-            self.enableGUI()
+            self.bboxBtn.config(state=NORMAL)
+            self.enableControlGUI()
 
             if (x2 - x1) > 0:
                 boxWidth = x2 - x1
@@ -504,17 +635,12 @@ class LabelTool():
                                                             outline = COLORS[len(self.bboxList) % len(COLORS)])
 
     def confirmBBOX(self):
-        if self.classname.get()=='None' or self.ages.get()=='None' or self.facedir.get()=='None' or len(self.bboxIdList) == 0:
+        if self.classname.get() =='None' or self.ages.get() =='None' or len(self.bboxIdList) == 0:
             return
-        if self.classname.get() == '1' and self.ages.get() != '3':
-            self.popupWindowGen(popupWindowType='AGE')
-            return
-        if self.covered.get() == 'None': #prevent initial no value'
-            self.infoCovered = 'No blanket'
         self.popupWindowGen(popupWindowType='BBOX_OK')
 
     def confirmPhoto(self):
-        if self.classname.get()=='None' or self.ages.get()=='None' or self.facedir.get()=='None':
+        if self.classname.get()=='None' or self.ages.get()=='None':
             return
         self.popupWindowGen(popupWindowType='DONE')
 
@@ -522,77 +648,74 @@ class LabelTool():
         self.popupWindowGen(popupWindowType='NO_OBJ')
 
     # create pop-up window
-    def popupWindowGen(self, popupWindowType=None, okBtn=True):
-        self.popupWindowFlag = 1
+    def popupWindowGen(self, popupWindowType=None):
+        self.disableAllGUI()
 
         self.WindwType = popupWindowType
         if self.WindwType == 'BBOX_OK':
-            self.bboxBtn.config(state=DISABLED)
+            self.appendToList()
             self.popupWindow = Toplevel(self.parent)
+            self.popupWindow.geometry("%dx%d+%d+%d" % (300, 300, 200, 500))
             self.popupWindow.title("Sure?")
 
-            self.bboxInfoOne = Label(self.popupWindow, bg='tomato', width=20, height = 3, text='')
-            self.bboxInfoOne.grid(row = 0, column = 0, sticky = W+E)
-            self.bboxInfoOne.config(text = self.infoClass + '/' + self.infoAge, font=("Courier", 20), fg='white')
-            self.bboxInfoTwo = Label(self.popupWindow, bg='tomato', width=20, height = 3, text='')
-            self.bboxInfoTwo.grid(row = 1, column = 0, sticky = W+E)
-            self.bboxInfoTwo.config(text = self.infoFace + '/' + self.infoCovered, font=("Courier", 20), fg='white')
-            self.popup_label = Label(self.popupWindow, text="Confirmed & Label next bbox?", font=("Courier", 15), fg="black")
-            self.popup_label.grid(row = 2, column = 0, sticky = W+E)
-
-            self.btn_popup1 = Button(self.popupWindow, text="OK", height=2, width=5, command=self.popup_ok)
-            self.btn_popup2 = Button(self.popupWindow, text="CANCLE", height=2, width=5, command=self.popup_cancle)
-            self.btn_popup1.grid(row = 3, column = 1, sticky = W+E)
-            self.btn_popup2.grid(row = 3, column = 0, sticky = W+E)
-            if okBtn == False:
-                self.btn_popup1.config(state=DISABLED)
+            textOne = self.handleBodyPosture()
+            textTwo = self.handleBodyCovered()
+            self.bboxInfoOne = Label(self.popupWindow, bg='tomato', width=24, height = 3)
+            self.bboxInfoOne.config(text = self.infoClass + '/' + self.infoAge, font=("Courier", 18), fg='white')
+            self.bboxInfoOne.grid(row = 0, column = 0, sticky = N+S+W+E)
+            self.bboxInfoTwo = Label(self.popupWindow, bg='tomato', width=24, height = 3)
+            self.bboxInfoTwo.config(text = textOne, font=("Courier", 18), fg='white')
+            self.bboxInfoTwo.grid(row = 1, column = 0, sticky = N+S+W+E)
+            self.bboxInfoThr = Label(self.popupWindow, bg='tomato', width=24, height = 3)
+            self.bboxInfoThr.config(text = textTwo, font=("Courier", 18), fg='white')
+            self.bboxInfoThr.grid(row = 2, column = 0, sticky = N+S+W+E)
+            self.btn_popup1 = Button(self.popupWindow, text="OK", height=3, command=self.popup_ok)
+            self.btn_popup1.grid(row = 3, column = 0, sticky = N+S+W+E)
+            self.btn_popup2 = Button(self.popupWindow, text="CANCEL", height=3, command=self.popup_cancel)
+            self.btn_popup2.grid(row = 4, column = 0, sticky = N+S+W+E)
 
         elif self.WindwType == 'DONE':
-            self.doneBtn.config(state=DISABLED)
             self.popupWindow = Toplevel(self.parent)
             self.popupWindow.title("Sure?")
-            self.popup_label = Label(self.popupWindow,text="Save and load next image", fg="black")
-            self.popupWindow.geometry("%dx%d" % (400, 200))
+            self.popup_label = Label(self.popupWindow,text="Save and load next image", font=("Courier", 18), fg="black")
+            self.popupWindow.geometry("%dx%d+%d+%d" % (300, 200, 200, 500))
             self.popup_label.pack()
-            self.btn_popup1 = Button(self.popupWindow, text="OK", height=2, width=5, command=self.popup_ok)
-            self.btn_popup2 = Button(self.popupWindow, text="CANCLE", height=2, width=5, command=self.popup_cancle)
+            self.btn_popup1 = Button(self.popupWindow, text="OK", width=20, height=3, command=self.popup_ok)
             self.btn_popup1.pack(side=RIGHT)
+            self.btn_popup2 = Button(self.popupWindow, text="CANCEL", width=20, height=3, command=self.popup_cancel)
             self.btn_popup2.pack(side=LEFT)
-            if okBtn == False:
-                self.btn_popup1.config(state=DISABLED)
 
         elif self.WindwType == 'NO_OBJ':
-            self.noObjBtn.config(state=DISABLED)
             self.popupWindow = Toplevel(self.parent)
             self.popupWindow.title("Sure?")
             self.bboxInfoOne = Label(self.popupWindow, bg='tomato', width=20, height = 3, text='')
             self.bboxInfoOne.grid(row = 0, column = 0, sticky = W+E)
             self.bboxInfoOne.config(text = "NO Objects?", font=("Courier", 20), fg='white')
             self.btn_popup1 = Button(self.popupWindow, text="OK", height=2, width=5, command=self.popup_ok)
-            self.btn_popup2 = Button(self.popupWindow, text="CANCLE", height=2, width=5, command=self.popup_cancle)
+            self.btn_popup2 = Button(self.popupWindow, text="CANCEL", height=2, width=5, command=self.popup_cancel)
             self.btn_popup1.grid(row = 3, column = 1, sticky = W+E)
             self.btn_popup2.grid(row = 3, column = 0, sticky = W+E)
-
-        elif self.WindwType == 'AGE':
-            messagebox.showerror("Error!", message = "Age error!")
 
         else:
             messagebox.showerror("Error!", message = "popup window error!")
 
     def popup_ok(self):
         self.popupWindow.destroy()
-        self.popupWindowFlag = 0
-        self.disableBottomGUI()
-
         if self.WindwType == 'BBOX_OK':
-            self.updateBBoxList()
+            self.resetBtnValue()
+            self.disableBottomGUI()
+            self.enableControlGUI()
         else:
             self.noObjBtn.config(state=NORMAL)
             self.updateImageDic()
 
-    def popup_cancle(self):
+    def popup_cancel(self):
         self.popupWindow.destroy()
-        self.popupWindowFlag = 0
+        self.enableBottomGUI()
+        self.enableControlGUI()
+        if self.WindwType == 'BBOX_OK':
+            self.popLastList()
+            self.bboxBtn.config(state=NORMAL)
 
     def cancelBBox(self, event):
         if 1 == self.STATE['click']:
@@ -602,7 +725,6 @@ class LabelTool():
                 self.STATE['click'] = 0
 
     def delBBox(self):
-        # delete bbox only
         sel = self.listbox.curselection()
         if len(sel) != 1 :
             return
@@ -614,11 +736,9 @@ class LabelTool():
         self.listbox.delete(idx)
         self.sizeList.pop(idx)
 
-        # delete bbox detail
-        self.classList.pop(idx)
-        self.ageList.pop(idx)
-        self.blanketList.pop(idx)
-        self.faceList.pop(idx)
+        # when index is 0, all List length should be 1
+        if (idx + 1) == len(self.classList):
+            self.popLastList()
 
     def clearBBox(self):
         for idx in range(len(self.bboxIdList)):
@@ -628,47 +748,50 @@ class LabelTool():
         self.bboxList = []
         self.classList = []
         self.ageList = []
+        self.leanList = []
+        self.twistList = []
         self.blanketList = []
-        self.faceList = []
+        self.overlapList = []
         self.sizeList = []
-        self.disableGUI()
+        if self.loadLabelOnly == 1:
+            self.previewImageLabelGUI()
+        else:
+            self.initStateGUI()
 
-    def updateBBoxList(self):
-        print (">>>> updateBBoxList")
+    def handleBodyPosture(self):
+        textOne = self.infoBodyLean.split('No')[0] + ' / ' + self.infoBodyTwisted.split('No')[0]
+        return textOne
+    def handleBodyCovered(self):
+        textTwo = self.infoCovered.split('No')[0] + ' / ' + self.infoBodyOverlap.split('No')[0]
+        return textTwo
+
+    def appendToList(self):
         self.classList.append(self.infoClass)
         self.ageList.append(self.infoAge)
-        self.faceList.append(self.infoFace)
+        self.leanList.append(self.infoBodyLean)
+        self.twistList.append(self.infoBodyTwisted)
         self.blanketList.append(self.infoCovered)
+        self.overlapList.append(self.infoBodyOverlap)
 
-        if (len(self.bboxList)>1) and (self.bboxList[-1]==self.bboxList[-2]):
-            self.mainPanel.delete(self.bboxIdList[-1])
-            self.bboxIdList.pop(-1)
-            self.bboxList.pop(-1)
-            self.listbox.delete(-1)
-            self.sizeList.pop(-1)
+    def popLastList(self):
+        self.classList = self.classList[:-1]
+        self.ageList = self.ageList[:-1]
+        self.leanList = self.leanList[:-1]
+        self.twistList = self.twistList[:-1]
+        self.blanketList = self.blanketList[:-1]
+        self.overlapList = self.overlapList[:-1]
 
-            # delete bbox detail
-            self.classList.pop(-1)
-            self.ageList.pop(-1)
-            self.blanketList.pop(-1)
-            self.faceList.pop(-1)
-
-        #e.g. draw a bbox -> Delete -> BBOX OK
-        if len(self.bboxList)!=len(self.classList):
-            # delete bbox detail
-            self.classList.pop(-1)
-            self.ageList.pop(-1)
-            self.blanketList.pop(-1)
-            self.faceList.pop(-1)
-
-        # debug
+    def printAllList(self):
         print(self.imgInfo)
         print(self.bboxList)
         print(self.classList)
         print(self.ageList)
-        print(self.faceList)
+        print(self.leanList)
+        print(self.twistList)
         print(self.blanketList)
+        print(self.overlapList)
         print(self.sizeList)
+
 
     #[Ryk] ToDo
     def updateImageDic(self):
@@ -699,7 +822,6 @@ class LabelTool():
                     "y2": int(point[3] / self.factor),
                     "class": self.classList[i],
                     "age_range": self.ageList[i],
-                    "face": self.faceList[i],
                     "blanket": self.blanketList[i],
                     "size": self.sizeList[i]
                 })
