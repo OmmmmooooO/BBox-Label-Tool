@@ -9,7 +9,6 @@ import os
 import glob
 import json
 import random
-import utils
 import platform
 
 # colors for the bboxes
@@ -494,8 +493,28 @@ class LabelTool():
         self.img =ImageEnhance.Brightness(rawimg).enhance(1.2)
 
         size = self.img.size
-        self.factor = min(round(max_width/size[0], 2), round(max_height/size[1], 2))
-        self.img = self.img.resize((int(size[0]*self.factor), int(size[1]*self.factor)))
+        long_side = 800
+
+        #if (size[0] and size[1]) < long_side:
+        if size[0] >= size[1]:
+            self.factor = long_side / size[0]
+            self.img = self.img.resize((800, int(size[1]*self.factor)))
+        else:
+            self.factor = long_side / size[1]
+            self.img = self.img.resize((int(size[0]*self.factor), 800))
+        print('Resize factor = ', self.factor, ' Original size = ', size, ' Current size = ', self.img.size)
+        '''
+        else:
+            if size[0] >= size[1]:
+                self.factor = long_side * size[0]
+                self.img = self.img.resize((800, int(size[1]*self.factor)))
+            else:
+                self.factor = long_side * size[1]
+                self.img = self.img.resize((int(size[0]*self.factor), 800))
+        '''
+        #self.factor = min(round(max_width/size[0], 2), round(max_height/size[1], 2))
+        #self.img = self.img.resize((int(size[0]*self.factor), int(size[1]*self.factor)))
+        
         self.tkimg = ImageTk.PhotoImage(self.img)
         self.mainPanel.config(width = max(self.tkimg.width(), PSIZE), height = max(self.tkimg.height(), PSIZE))
         self.mainPanel.create_image(0, 0, image = self.tkimg, anchor=NW)
