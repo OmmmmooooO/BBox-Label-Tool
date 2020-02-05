@@ -355,16 +355,22 @@ class LabelTool():
         max_height = screen_height * 0.7
         self.img = Image.open(imagepath)
         size = self.img.size
-        self.factor = 1
-        if (size[0] or size[1]) < 800:
-            pass
+        long_side = 800
+
+        if (size[0] or size[1]) < long_side:
+            if size[0] >= size[1]:
+                self.factor = long_side / size[0]
+                self.img = self.img.resize((long_side, int(size[1]*self.factor)))
+            else:
+                self.factor = long_side / size[1]
+                self.img = self.img.resize((int(size[0]*self.factor), long_side))
         else:
             if size[0] >= size[1]:
-                self.factor = 800 / size[0]
-                self.img = self.img.resize((800, int(size[1]*self.factor)))
+                self.factor = long_side / size[0]
+                self.img = self.img.resize((long_side, int(size[1]*self.factor)))
             else:
-                self.factor = 800 / size[1]
-                self.img = self.img.resize((int(size[0]*self.factor), 800))
+                self.factor = long_side / size[1]
+                self.img = self.img.resize((int(size[0]*self.factor), long_side))
 
         #self.factor = min(round(max_width/size[0], 2), round(max_height/size[1], 2))
         #self.img = self.img.resize((int(size[0]*self.factor), int(size[1]*self.factor)))
