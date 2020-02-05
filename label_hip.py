@@ -3,7 +3,7 @@ from tkinter import filedialog
 from tkinter import messagebox
 from tkinter import ttk
 from tkinter import Toplevel
-from PIL import Image, ImageTk, ImageEnhance
+from PIL import Image, ImageTk
 import datetime
 import os
 import glob
@@ -468,7 +468,7 @@ class LabelTool():
             basicinfo = nextlevel[0].split('_')
         else:
             basicinfo = imagepath.split('/')[-2].split('_')
-
+        print(basicinfo)
         for (i, text) in enumerate(basicinfo):
             if text == 'bw':
                 self.imgInfo.append(0)
@@ -485,36 +485,20 @@ class LabelTool():
             elif text == 'pet':
                 self.imgInfo.append(1)
 
-        screen_width = root.winfo_screenwidth()
-        screen_height = root.winfo_screenheight()
-        max_width = screen_width * 0.6
-        max_height = screen_height * 0.6
-        rawimg = Image.open(imagepath)
-        self.img =ImageEnhance.Brightness(rawimg).enhance(1.2)
+        self.img = Image.open(imagepath)
+        #self.img =ImageEnhance.Brightness(rawimg).enhance(1.2)
 
         size = self.img.size
         long_side = 800
 
-        #if (size[0] and size[1]) < long_side:
         if size[0] >= size[1]:
             self.factor = long_side / size[0]
             self.img = self.img.resize((800, int(size[1]*self.factor)))
         else:
             self.factor = long_side / size[1]
             self.img = self.img.resize((int(size[0]*self.factor), 800))
-        print('Resize factor = ', self.factor, ' Original size = ', size, ' Current size = ', self.img.size)
-        '''
-        else:
-            if size[0] >= size[1]:
-                self.factor = long_side * size[0]
-                self.img = self.img.resize((800, int(size[1]*self.factor)))
-            else:
-                self.factor = long_side * size[1]
-                self.img = self.img.resize((int(size[0]*self.factor), 800))
-        '''
-        #self.factor = min(round(max_width/size[0], 2), round(max_height/size[1], 2))
-        #self.img = self.img.resize((int(size[0]*self.factor), int(size[1]*self.factor)))
-        
+        #print('Resize factor = ', self.factor, ' Original size = ', size, ' Current size = ', self.img.size)
+
         self.tkimg = ImageTk.PhotoImage(self.img)
         self.mainPanel.config(width = max(self.tkimg.width(), PSIZE), height = max(self.tkimg.height(), PSIZE))
         self.mainPanel.create_image(0, 0, image = self.tkimg, anchor=NW)
