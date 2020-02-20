@@ -130,6 +130,16 @@ class LabelTool():
         # left side of GUI, right side of patient in x-ray
         self.BtnPanel_R = Frame(self.frame)
         self.BtnPanel_R.grid(row = 2, column = 0, sticky = E+N)
+        
+        # annotator
+        self.annotatorLb = Label(self.BtnPanel_R, text = 'Annotator:')
+        self.annotatorLb.pack(anchor=NW)
+        self.annotatorName = tkinter.StringVar(self.BtnPanel_R)
+        self.annotatorName.set("Name") # default size 100*100
+        vcmd = (self.BtnPanel_R.register(self.validate), '%d', '%i', '%P', '%s', '%S', '%v', '%V', '%W')
+        self.annotatorEtr = Entry(self.BtnPanel_R, validate = 'key', validatecommand = vcmd, textvariable=self.annotatorName)
+        self.annotatorEtr.pack(anchor=NW)
+
         self.sideLb_R = Label(self.BtnPanel_R, text = 'Right')
         self.sideLb_R.pack(anchor=NW)
         self.sideLb_R.config(font=("Courier", 20))
@@ -219,6 +229,15 @@ class LabelTool():
         self.gradeBtn_R_4.config(state=NORMAL)
         self.gradeBtn_R_5.config(state=NORMAL)
 
+    # Valid list for entry object to restrict some characters.
+    def validate(self, action, index, value_if_allowed, prior_value, text, validation_type, trigger_type, widget_name):
+        if text in 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ ':
+            try:
+                return True
+            except ValueError:
+                return False
+        else:
+            return False
 
     # [Control GUI]
     def enableControlGUI(self):
@@ -464,12 +483,12 @@ class LabelTool():
         imagepath_list = imagepath.split('/')
         image_id = imagepath_list.pop()
         image_id = image_id[:-4]
-        imagepath_list.pop()
+        #imagepath_list.pop()
         
         def listToString(li):  
             str1 = '/'
             return (str1.join(li)) 
-
+        
         subimagepath_L = listToString(imagepath_list) + '/crop/' + image_id + '_R.jpg'
         subimagepath_R = subimagepath_L[:-5] + 'L.jpg'
 
