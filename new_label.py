@@ -10,6 +10,7 @@ import glob
 import json
 import random
 import platform
+import pandas as pd
 
 # image sizes for the examples
 SIZE = 256, 256
@@ -52,20 +53,21 @@ class LabelTool():
         # >>>>>>> [UPPER PART] <<<<<<<
         # button: Load Unlabel Images
         # button: Load Labeled Images
-        self.srcDirBtn = Button(self.frame, text = "Un-Label", command = self.selectSrcDir, width = 10)
+        self.srcDirBtn = Button(self.frame, text = "Image Folder", command = self.selectSrcDir, width = 10)
         self.srcDirBtn.grid(row = 0, column = 0)
         self.svSourcePath = StringVar()
         self.svSourcePath.set(os.getcwd())
         self.entrySrcDir = Entry(self.frame, textvariable = self.svSourcePath)
-        self.entrySrcDir.grid(row = 0, column = 1, columnspan=4, sticky = W+E)
-
+        self.entrySrcDir.grid(row = 0, column = 1, columnspan=4, rowspan=2, sticky = W+E)
+        
+        '''
         self.srcLoadBtn = Button(self.frame, text = "Labeled", command = self.selectLoadDir, width = 10)
         self.srcLoadBtn.grid(row = 1, column = 0)
         self.svLoadPath = StringVar()
         self.svLoadPath.set(os.getcwd())
         self.entryLoadDir = Entry(self.frame, textvariable = self.svLoadPath)
         self.entryLoadDir.grid(row = 1, column = 1, columnspan=4, sticky = W+E)
-
+        '''
 
         # >>>>>>> [CENTER PART] <<<<<<<
         # main panel for labeling
@@ -130,16 +132,17 @@ class LabelTool():
         # left side of GUI, right side of patient in x-ray
         self.BtnPanel_R = Frame(self.frame)
         self.BtnPanel_R.grid(row = 2, column = 0, sticky = E+N)
-        
+
         # annotator
+        '''
         self.annotatorLb = Label(self.BtnPanel_R, text = 'Annotator:')
         self.annotatorLb.pack(anchor=NW)
-        self.annotatorName = tkinter.StringVar(self.BtnPanel_R)
+        self.annotatorName = StringVar(self.BtnPanel_R)
         self.annotatorName.set("Name") # default size 100*100
         vcmd = (self.BtnPanel_R.register(self.validate), '%d', '%i', '%P', '%s', '%S', '%v', '%V', '%W')
         self.annotatorEtr = Entry(self.BtnPanel_R, validate = 'key', validatecommand = vcmd, textvariable=self.annotatorName)
         self.annotatorEtr.pack(anchor=NW)
-
+        '''
         self.sideLb_R = Label(self.BtnPanel_R, text = 'Right')
         self.sideLb_R.pack(anchor=NW)
         self.sideLb_R.config(font=("Courier", 20))
@@ -230,6 +233,7 @@ class LabelTool():
         self.gradeBtn_R_5.config(state=NORMAL)
 
     # Valid list for entry object to restrict some characters.
+    '''
     def validate(self, action, index, value_if_allowed, prior_value, text, validation_type, trigger_type, widget_name):
         if text in 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ ':
             try:
@@ -238,6 +242,7 @@ class LabelTool():
                 return False
         else:
             return False
+    '''
 
     # [Control GUI]
     def enableControlGUI(self):
@@ -336,18 +341,22 @@ class LabelTool():
         self.svSourcePath.set(path)
         self.loadUnLabelImg()
         return
-
+    '''
     def selectLoadDir(self):
         path = filedialog.askdirectory(title="Select image source folder", initialdir=self.svLoadPath.get())
         self.svLoadPath.set(path)
         self.loadLabeledImg()
         return
-
+    '''
     def loadUnLabelImg(self):
         self.loadLabelOnly = 0
         self.parent.focus()
         self.imageDir = self.svSourcePath.get()
         self.imageList = []
+        self.xlsDir = os.path.join(self.imageDir, 'HumanOA_Annotation_masterTable_1001_2019.xls')
+        df = pd.read_excel(open(self.xlsDir,'rb'), sheet_name=0)
+        self.idArray = df.loc[:,['PatientID', 'MatchId']].dropna()
+        
         if not os.path.isdir(self.imageDir):
             messagebox.showerror("Error!", message = "The specified dir doesn't exist!")
             return
@@ -358,6 +367,11 @@ class LabelTool():
             extlist = windowtlist
         else:
             extlist = otherOslist
+        
+        
+        for i in range(len(self.idArray)) : 
+            print(self.idArray.loc[i, 'PatientID'], self.idArray.loc[i, 'MatchId']) 
+        
 
         for e in extlist:
             filelist = glob.glob(os.path.join(self.imageDir, e))
@@ -370,14 +384,14 @@ class LabelTool():
         # count total before deduction done list
         self.cur = 1
         self.count = 1
-        self.total = len(self.imageList)
+        self.total = len(self.idArray.loc[:,])
         self.imageList.sort()
 
         # set up output label dir the same as svSourcePath
         self.outDir = self.svSourcePath.get() + '/Labels'
         if not os.path.exists(self.outDir):
             os.mkdir(self.outDir)
-
+        
         # load json file, compare images file list with json
         doneList = []
         undoneList = []
@@ -402,7 +416,7 @@ class LabelTool():
         self.initStateGUI()
         self.resetRadioButton()
         self.enableControlGUI()
-
+    '''
     def loadLabeledImg(self):
         self.loadLabelOnly = 1
         self.parent.focus()
@@ -457,7 +471,7 @@ class LabelTool():
         self.previewImageLabelGUI()
         self.resetRadioButton()
         self.loadLabel()
-
+        '''
     def loadImage(self):
         # load image & directory information
         # load image to main panel canvas
