@@ -25,7 +25,6 @@ class LabelTool():
         self.frame = Frame(self.parent)
         self.frame.pack(fill=BOTH, expand=1)
         self.parent.resizable(width = FALSE, height = FALSE)
-        self.area = 0
         self.loadLabelOnly = 0
 
         # initialize global state
@@ -83,13 +82,13 @@ class LabelTool():
         self.matchID = 'MatchID:'
         self.matchIDLb = Label(self.frame, text=self.matchID)
         self.matchIDLb.grid(row = 3, column = 5, sticky = NW)
-        self.matchIDLb.config(font=("Courier", 16))
+        self.matchIDLb.config(font=("Helvetica", 16))
 
         self.BtnPanel_L = Frame(self.frame)
         self.BtnPanel_L.grid(row = 4, column = 5, rowspan = 4, sticky = NW)
         self.sideLb_L = Label(self.BtnPanel_L, text = 'Left')
         self.sideLb_L.pack(anchor=NW)
-        self.sideLb_L.config(font=("Courier", 20))
+        self.sideLb_L.config(font=("Helvetica", 16))
 
         # radio button: Etiology
         self.etiologyLb_L = Label(self.BtnPanel_L, text = 'Etiology:')
@@ -153,7 +152,7 @@ class LabelTool():
         '''
         self.sideLb_R = Label(self.BtnPanel_R, text = 'Right')
         self.sideLb_R.pack(anchor=NW)
-        self.sideLb_R.config(font=("Courier", 20))
+        self.sideLb_R.config(font=("Courier", 16))
 
         # radio button: Etiology
         self.etiologyLb_R = Label(self.BtnPanel_R, text = 'Etiology:')
@@ -200,6 +199,7 @@ class LabelTool():
         self.progLabel.grid(row = 8, column = 0, sticky = W+N)
         self.filenameLabel = Label(self.frame, text = "PatientID:")
         self.filenameLabel.grid(row = 8, column = 1, sticky = W+N)
+        self.filenameLabel.config(font=("Helvetica", 16))
         self.prevBtn = Button(self.frame, text='<< Prev', width = 10, command = self.prevImage, state = DISABLED)
         self.prevBtn.grid(row = 8, column = 2, sticky = W+N)
         self.nextBtn = Button(self.frame, text='Next >>', width = 10, command = self.nextImage, state = DISABLED)
@@ -328,7 +328,7 @@ class LabelTool():
             return
 
         fileDir = self.svSourcePath.get()
-        xlsDir = os.path.join(fileDir, 'HumanOA_Annotation_masterTable_1001_2019.xls')
+        xlsDir = os.path.join(fileDir, 'HumanOA_Annotation_masterTable_0225_2020.xls')
         df = pd.read_excel(open(xlsDir,'rb'), sheet_name=0)
         self.idArray = df.loc[:,['PatientID', 'MatchId']].dropna()
         
@@ -337,13 +337,13 @@ class LabelTool():
         self.count = 1
         self.total = len(self.idArray.loc[:,])
 
-        _imgDirList     = (fileDir + '/').split() * self.total
+        _imgDirList     = (fileDir + '/original/').split() * self.total
         _imgIdList      = self.idArray['PatientID'].tolist()
         _matchimgIdList = self.idArray['MatchId'].tolist()
         _filenameExt    = '.jpg'.split() * self.total        
         self.imageList      = [x+y+z for x,y,z in zip(_imgDirList, _imgIdList, _filenameExt)]
         self.matchimageList = [x+y+z for x,y,z in zip(_imgDirList, _matchimgIdList, _filenameExt)]
-
+        print('>>>>>>', self.imageList)
         # set up output label dir the same as svSourcePath
         self.outDir = fileDir + '/Labels'
         if not os.path.exists(self.outDir):
@@ -443,7 +443,6 @@ class LabelTool():
         self.matchID = "Match ID: " + matchimgID
         self.matchIDLb.config(text=self.matchID)
 
-        print('>>>>>>>>', self.matchID)
         self.imgInfo.append(imagepath)
 
         if not os.path.isfile(imagepath):
@@ -471,7 +470,7 @@ class LabelTool():
         imagepath_list = imagepath.split('/')
         image_id = imagepath_list.pop()
         image_id = image_id[:-4]
-        #imagepath_list.pop()
+        imagepath_list.pop()
         
         def listToString(li):  
             str1 = '/'
@@ -499,20 +498,21 @@ class LabelTool():
             self.subPanel_R.delete('all')
 
         if os.path.isfile(matchimagepath):
-            self.matchImg = Image.open(matchimagepath)
-            size = self.matchImg.size
-            long_side = 300
+            with Image.open(matchimagepath) as matchImg:
+                self.matchImg = matchImg
+                size = self.matchImg.size
+                long_side = 300
 
-            if size[0] >= size[1]:
-                factor = long_side / size[0]
-                self.matchImg = self.matchImg.resize((300, int(size[1]*factor)))
-            else:
-                factor = long_side / size[1]
-                self.matchImg = self.matchImg.resize((int(size[0]*factor), 300))
-            self.tkimg_match = ImageTk.PhotoImage(self.matchImg)
+                if size[0] >= size[1]:
+                    factor = long_side / size[0]
+                    self.matchImg = self.matchImg.resize((300, int(size[1]*factor)))
+                else:
+                    factor = long_side / size[1]
+                    self.matchImg = self.matchImg.resize((int(size[0]*factor), 300))
+                self.tkimg_match = ImageTk.PhotoImage(self.matchImg)
 
-            self.matchimgPanel.config(width = 300, height = 300)            
-            self.matchimgPanel.create_image(0, 0, image = self.tkimg_match, anchor=NW)
+                self.matchimgPanel.config(width = 300, height = 300)            
+                self.matchimgPanel.create_image(0, 0, image = self.tkimg_match, anchor=NW)
         else:
             self.matchimgPanel.delete('all')
 
@@ -522,7 +522,6 @@ class LabelTool():
         else:
             self.progLabel.config(text = "%04d/%04d" %(self.cur, self.undone))
         
-        self.area = self.tkimg.width() * self.tkimg.height()
         self.imagename = image_id
         self.filenameLabel.config(text = "PatientID : %s" %(self.imagename))
 
