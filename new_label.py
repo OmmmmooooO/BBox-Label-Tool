@@ -1,19 +1,14 @@
 from tkinter import *
 from tkinter import filedialog
 from tkinter import messagebox
-from tkinter import ttk
 from tkinter import Toplevel
 from PIL import Image, ImageTk
 import datetime
 import os
 import glob
 import json
-import random
-import platform
 import pandas as pd
 
-# image sizes for the examples
-SIZE = 256, 256
 # panel size for init
 PSIZE = 500
 
@@ -25,57 +20,34 @@ class LabelTool():
         self.frame = Frame(self.parent)
         self.frame.pack(fill=BOTH, expand=1)
         self.parent.resizable(width = FALSE, height = FALSE)
-        self.loadLabelOnly = 0
 
         # initialize global state
-        self.imageDir = ''
         self.imageList = []
         self.outDir = ''
-        self.count = 0
         self.cur = 0
         self.total = 0
-        self.undone = 0
         self.imagename = ''
         self.labelfilename = ''
         self.tkimg = None
-        self.cla_can_temp = []
-
-
-        # reference to image and bbox info, "info" set default value
         self.imgInfo = []
-        self.infoClass = 'Hip'
-        self.infoAge = '0-6 month'
-        self.classList = []
-        self.ageList = []
 
         # ----------------- GUI stuff ---------------------
         # >>>>>>> [UPPER PART] <<<<<<<
-        # button: Load Unlabel Images
-        # button: Load Labeled Images
+        # button: Load Image
         self.srcDirBtn = Button(self.frame, text = "Image Folder", command = self.selectSrcDir, width = 10)
         self.srcDirBtn.grid(row = 0, column = 0, sticky = E)
         self.svSourcePath = StringVar()
         self.svSourcePath.set(os.getcwd())
         self.entrySrcDir = Entry(self.frame, textvariable = self.svSourcePath)
         self.entrySrcDir.grid(row = 0, column = 1, columnspan=4, sticky = W+E)
-        
-        '''
-        self.srcLoadBtn = Button(self.frame, text = "Labeled", command = self.selectLoadDir, width = 10)
-        self.srcLoadBtn.grid(row = 1, column = 0)
-        self.svLoadPath = StringVar()
-        self.svLoadPath.set(os.getcwd())
-        self.entryLoadDir = Entry(self.frame, textvariable = self.svLoadPath)
-        self.entryLoadDir.grid(row = 1, column = 1, columnspan=4, sticky = W+E)
-        '''
 
         # >>>>>>> [CENTER PART] <<<<<<<
-        # main panel for labeling
+        # canvas for original image
         self.mainPanel = Canvas(self.frame, cursor = 'tcross')
         self.mainPanel.grid(row = 1, column = 1, rowspan = 4, columnspan = 4, sticky = W+E+N+S)
 
         # >>>>>>> [RIGHT PART] <<<<<<<
         # right side of GUI, left side of patient in x-ray
-
         # canvas for matched image
         self.matchimgPanel = Canvas(self.frame, cursor = 'tcross')
         self.matchimgPanel.grid(row = 1, column = 5, rowspan = 2, columnspan = 2, sticky = W+E+N+S)
@@ -95,61 +67,64 @@ class LabelTool():
         self.etiologyLb_L.pack(anchor=NW)
         self.etiology_L = StringVar()
         self.etiology_L.set(None)
-        self.etiologyBtn_L_1 = Radiobutton(self.BtnPanel_L, text='Osteonecrosis', variable=self.etiology_L, value='0', command = self.setEtiology_L, state = DISABLED)
+        self.etiologyBtn_L_1 = Radiobutton(self.BtnPanel_L, text='Osteonecrosis', variable=self.etiology_L, value='0', command = self.setEtiologyBtn_L, state = DISABLED)
         self.etiologyBtn_L_1.pack(padx=10, pady=4, anchor=NW)
-        self.etiologyBtn_L_2 = Radiobutton(self.BtnPanel_L, text='Avascular necrosis', variable=self.etiology_L, value='1', command = self.setEtiology_L, state = DISABLED)
+        self.etiologyBtn_L_2 = Radiobutton(self.BtnPanel_L, text='Avascular necrosis', variable=self.etiology_L, value='1', command = self.setEtiologyBtn_L, state = DISABLED)
         self.etiologyBtn_L_2.pack(padx=10, pady=4, anchor=NW)
-        self.etiologyBtn_L_3 = Radiobutton(self.BtnPanel_L, text='Osteoarthritis', variable=self.etiology_L, value='2', command = self.setEtiology_L, state = DISABLED)
+        self.etiologyBtn_L_3 = Radiobutton(self.BtnPanel_L, text='Osteoarthritis', variable=self.etiology_L, value='2', command = self.setEtiologyBtn_L, state = DISABLED)
         self.etiologyBtn_L_3.pack(padx=10, pady=4, anchor=NW)
-        self.etiologyBtn_L_4 = Radiobutton(self.BtnPanel_L, text='Femoroacetabular impingement', variable=self.etiology_L, value='3', command = self.setEtiology_L, state = DISABLED)
+        self.etiologyBtn_L_4 = Radiobutton(self.BtnPanel_L, text='Femoroacetabular impingement', variable=self.etiology_L, value='3', command = self.setEtiologyBtn_L, state = DISABLED)
         self.etiologyBtn_L_4.pack(padx=10, pady=4, anchor=NW)
-        self.etiologyBtn_L_5 = Radiobutton(self.BtnPanel_L, text='others', variable=self.etiology_L, value='4', command = self.setEtiology_L, state = DISABLED)
+        self.etiologyBtn_L_5 = Radiobutton(self.BtnPanel_L, text='others', variable=self.etiology_L, value='4', command = self.setEtiologyBtn_L, state = DISABLED)
         self.etiologyBtn_L_5.pack(padx=10, pady=4, anchor=NW)
+        self.etiologyBtn_L_6 = Radiobutton(self.BtnPanel_L, text='Fracture', variable=self.etiology_L, value='5', command = self.setEtiologyBtn_L, state = DISABLED)
+        self.etiologyBtn_L_6.pack(padx=10, pady=4, anchor=NW)
 
         # radio button: Grade
         self.gradeLb_L = Label(self.BtnPanel_L, text = 'Grade:')
         self.gradeLb_L.pack(anchor=NW)
         self.grades_L = StringVar()
         self.grades_L.set(None)
-        self.gradeBtn_L_1 = Radiobutton(self.BtnPanel_L, text='1', variable=self.grades_L, value='0', command = self.setGrade_L, state = DISABLED)
+        self.gradeBtn_L_1 = Radiobutton(self.BtnPanel_L, text='1', variable=self.grades_L, value='0', command = self.setGradeBtn_L, state = DISABLED)
         self.gradeBtn_L_1.pack(padx=10, pady=4, anchor=NW)
-        self.gradeBtn_L_2 = Radiobutton(self.BtnPanel_L, text='2', variable=self.grades_L, value='1', command = self.setGrade_L, state = DISABLED)
+        self.gradeBtn_L_2 = Radiobutton(self.BtnPanel_L, text='2', variable=self.grades_L, value='1', command = self.setGradeBtn_L, state = DISABLED)
         self.gradeBtn_L_2.pack(padx=10, pady=4, anchor=NW)
-        self.gradeBtn_L_3 = Radiobutton(self.BtnPanel_L, text='3', variable=self.grades_L, value='2', command = self.setGrade_L, state = DISABLED)
+        self.gradeBtn_L_3 = Radiobutton(self.BtnPanel_L, text='3', variable=self.grades_L, value='2', command = self.setGradeBtn_L, state = DISABLED)
         self.gradeBtn_L_3.pack(padx=10, pady=4, anchor=NW)
-        self.gradeBtn_L_4 = Radiobutton(self.BtnPanel_L, text='4', variable=self.grades_L, value='3', command = self.setGrade_L, state = DISABLED)
+        self.gradeBtn_L_4 = Radiobutton(self.BtnPanel_L, text='4', variable=self.grades_L, value='3', command = self.setGradeBtn_L, state = DISABLED)
         self.gradeBtn_L_4.pack(padx=10, pady=4, anchor=NW)
-        self.gradeBtn_L_5 = Radiobutton(self.BtnPanel_L, text='5', variable=self.grades_L, value='4', command = self.setGrade_L, state = DISABLED)
+        self.gradeBtn_L_5 = Radiobutton(self.BtnPanel_L, text='5', variable=self.grades_L, value='4', command = self.setGradeBtn_L, state = DISABLED)
         self.gradeBtn_L_5.pack(padx=10, pady=4, anchor=NW)
-        self.gradeBtn_L_6 = Radiobutton(self.BtnPanel_L, text='Not specified', variable=self.grades_L, value='5', command = self.setGrade_L, state = DISABLED)
+        self.gradeBtn_L_6 = Radiobutton(self.BtnPanel_L, text='Not specified', variable=self.grades_L, value='5', command = self.setGradeBtn_L, state = DISABLED)
         self.gradeBtn_L_6.pack(padx=10, pady=4, anchor=NW)
 
         # canvas for cropped image
         self.subPanel_L = Canvas(self.frame, cursor = 'tcross')
         self.subPanel_L.grid(row = 5, column = 3, rowspan = 2, columnspan = 2, sticky = W)
 
-        # bounding boxes parts
-        self.btnClear = Button(self.BtnPanel_L, text = 'Clear All', width = 20, height = 2, command = self.reRadioBtn, state = DISABLED)
-        self.btnClear.pack()
-        self.doneBtn = Button(self.BtnPanel_L, text = 'Save annotation', width = 20, height = 5, command = self.confirmPhoto, fg='red', state = DISABLED)
+        # control button
+        self.clrBtn = Button(self.BtnPanel_L, text = 'Clear All', width = 20, height = 2, command = self.reRadioBtn, state = DISABLED)
+        self.clrBtn.pack()
+        self.doneBtn = Button(self.BtnPanel_L, text = 'Save annotation', width = 20, height = 5, command = self.confirmImage, fg='red', state = DISABLED)
         self.doneBtn.pack()
-
 
         # >>>>>>> [LEFT PART] <<<<<<<
         # left side of GUI, right side of patient in x-ray
-        self.BtnPanel_R = Frame(self.frame)
-        self.BtnPanel_R.grid(row = 4, column = 0, rowspan = 4, sticky = E+N)
+        self.GotoPanel = Frame(self.frame)
+        self.GotoPanel.grid(row = 1, column=0, rowspan = 3, sticky = NW)
+        self.gotoLb = Label(self.GotoPanel, text = 'PatientID:')
+        self.gotoLb.pack(anchor=NW)
+        self.gotoText = StringVar(self.GotoPanel)
+        self.gotoText.set('000000_01A') 
+        vcmd = (self.GotoPanel.register(self.validate), '%d', '%i', '%P', '%s', '%S', '%v', '%V', '%W')
+        self.gotoEtr = Entry(self.GotoPanel, validate = 'key', validatecommand = vcmd, textvariable=self.gotoText)
+        self.gotoEtr.pack(anchor=NW)
+        self.gotoBtn = Button(self.GotoPanel, text = 'GO', width = 5, height = 1, command = self.gotoImage, state = DISABLED)
+        self.gotoBtn.pack(anchor=NW)
 
-        # annotator
-        '''
-        self.annotatorLb = Label(self.BtnPanel_R, text = 'Annotator:')
-        self.annotatorLb.pack(anchor=NW)
-        self.annotatorName = StringVar(self.BtnPanel_R)
-        self.annotatorName.set("Name") # default size 100*100
-        vcmd = (self.BtnPanel_R.register(self.validate), '%d', '%i', '%P', '%s', '%S', '%v', '%V', '%W')
-        self.annotatorEtr = Entry(self.BtnPanel_R, validate = 'key', validatecommand = vcmd, textvariable=self.annotatorName)
-        self.annotatorEtr.pack(anchor=NW)
-        '''
+
+        self.BtnPanel_R = Frame(self.frame)
+        self.BtnPanel_R.grid(row = 4, column = 0, rowspan = 4, sticky = NE)
         self.sideLb_R = Label(self.BtnPanel_R, text = 'Right')
         self.sideLb_R.pack(anchor=NW)
         self.sideLb_R.config(font=("Courier", 16))
@@ -159,40 +134,45 @@ class LabelTool():
         self.etiologyLb_R.pack(anchor=NW)
         self.etiology_R = StringVar()
         self.etiology_R.set(None)
-        self.etiologyBtn_R_1 = Radiobutton(self.BtnPanel_R, text='Osteonecrosis', variable=self.etiology_R, value='0', command = self.setEtiology_R, state = DISABLED)
+        self.etiologyBtn_R_1 = Radiobutton(self.BtnPanel_R, text='Osteonecrosis', variable=self.etiology_R, value='0', command = self.setEtiologyBtn_R, state = DISABLED)
         self.etiologyBtn_R_1.pack(padx=10, pady=4, anchor=NW)
-        self.etiologyBtn_R_2 = Radiobutton(self.BtnPanel_R, text='Avascular necrosis', variable=self.etiology_R, value='1', command = self.setEtiology_R, state = DISABLED)
+        self.etiologyBtn_R_2 = Radiobutton(self.BtnPanel_R, text='Avascular necrosis', variable=self.etiology_R, value='1', command = self.setEtiologyBtn_R, state = DISABLED)
         self.etiologyBtn_R_2.pack(padx=10, pady=4, anchor=NW)
-        self.etiologyBtn_R_3 = Radiobutton(self.BtnPanel_R, text='Osteoarthritis', variable=self.etiology_R, value='2', command = self.setEtiology_R, state = DISABLED)
+        self.etiologyBtn_R_3 = Radiobutton(self.BtnPanel_R, text='Osteoarthritis', variable=self.etiology_R, value='2', command = self.setEtiologyBtn_R, state = DISABLED)
         self.etiologyBtn_R_3.pack(padx=10, pady=4, anchor=NW)
-        self.etiologyBtn_R_4 = Radiobutton(self.BtnPanel_R, text='Femoroacetabular impingement', variable=self.etiology_R, value='3', command = self.setEtiology_R, state = DISABLED)
+        self.etiologyBtn_R_4 = Radiobutton(self.BtnPanel_R, text='Femoroacetabular impingement', variable=self.etiology_R, value='3', command = self.setEtiologyBtn_R, state = DISABLED)
         self.etiologyBtn_R_4.pack(padx=10, pady=4, anchor=NW)
-        self.etiologyBtn_R_5 = Radiobutton(self.BtnPanel_R, text='others', variable=self.etiology_R, value='4', command = self.setEtiology_R, state = DISABLED)
+        self.etiologyBtn_R_5 = Radiobutton(self.BtnPanel_R, text='others', variable=self.etiology_R, value='4', command = self.setEtiologyBtn_R, state = DISABLED)
         self.etiologyBtn_R_5.pack(padx=10, pady=4, anchor=NW)
+        self.etiologyBtn_R_6 = Radiobutton(self.BtnPanel_R, text='Fracture', variable=self.etiology_R, value='5', command = self.setEtiologyBtn_R, state = DISABLED)
+        self.etiologyBtn_R_6.pack(padx=10, pady=4, anchor=NW)
         
         # radio button: Grade
         self.gradeLb_R = Label(self.BtnPanel_R, text = 'Grade:')
         self.gradeLb_R.pack(anchor=NW)
         self.grades_R = StringVar()
         self.grades_R.set(None)
-        self.gradeBtn_R_1 = Radiobutton(self.BtnPanel_R, text='1', variable=self.grades_R, value='0', command = self.setGrade_R, state = DISABLED)
+        self.gradeBtn_R_1 = Radiobutton(self.BtnPanel_R, text='1', variable=self.grades_R, value='0', command = self.setGradeBtn_R, state = DISABLED)
         self.gradeBtn_R_1.pack(padx=10, pady=4, anchor=NW)
-        self.gradeBtn_R_2 = Radiobutton(self.BtnPanel_R, text='2', variable=self.grades_R, value='1', command = self.setGrade_R, state = DISABLED)
+        self.gradeBtn_R_2 = Radiobutton(self.BtnPanel_R, text='2', variable=self.grades_R, value='1', command = self.setGradeBtn_R, state = DISABLED)
         self.gradeBtn_R_2.pack(padx=10, pady=4, anchor=NW)
-        self.gradeBtn_R_3 = Radiobutton(self.BtnPanel_R, text='3', variable=self.grades_R, value='2', command = self.setGrade_R, state = DISABLED)
+        self.gradeBtn_R_3 = Radiobutton(self.BtnPanel_R, text='3', variable=self.grades_R, value='2', command = self.setGradeBtn_R, state = DISABLED)
         self.gradeBtn_R_3.pack(padx=10, pady=4, anchor=NW)
-        self.gradeBtn_R_4 = Radiobutton(self.BtnPanel_R, text='4', variable=self.grades_R, value='3', command = self.setGrade_R, state = DISABLED)
+        self.gradeBtn_R_4 = Radiobutton(self.BtnPanel_R, text='4', variable=self.grades_R, value='3', command = self.setGradeBtn_R, state = DISABLED)
         self.gradeBtn_R_4.pack(padx=10, pady=4, anchor=NW)
-        self.gradeBtn_R_5 = Radiobutton(self.BtnPanel_R, text='5', variable=self.grades_R, value='4', command = self.setGrade_R, state = DISABLED)
+        self.gradeBtn_R_5 = Radiobutton(self.BtnPanel_R, text='5', variable=self.grades_R, value='4', command = self.setGradeBtn_R, state = DISABLED)
         self.gradeBtn_R_5.pack(padx=10, pady=4, anchor=NW)
-        self.gradeBtn_R_6 = Radiobutton(self.BtnPanel_R, text='Not specified', variable=self.grades_R, value='5', command = self.setGrade_R, state = DISABLED)
+        self.gradeBtn_R_6 = Radiobutton(self.BtnPanel_R, text='Not specified', variable=self.grades_R, value='5', command = self.setGradeBtn_R, state = DISABLED)
         self.gradeBtn_R_6.pack(padx=10, pady=4, anchor=NW)
+        
+        # skip button for unknown annotation
+        self.skipBtn = Button(self.BtnPanel_R, text = 'Unknown Annotation\n Skip This Image', width = 20, height = 3, command = self.skipImage, fg='red',state = DISABLED)
+        self.skipBtn.pack(padx=10, pady=20, anchor=SW)
 
         # canvas for cropped image
         self.subPanel_R = Canvas(self.frame, cursor = 'tcross')
         self.subPanel_R.grid(row = 5, column = 1, rowspan = 2, columnspan = 2, sticky = E)
-
-
+        
         # >>>>>>> [BOTTOM PART] <<<<<<<
         # control panel for image navigation
         self.progLabel = Label(self.frame, text = "Progress:     /    ")
@@ -204,21 +184,17 @@ class LabelTool():
         self.prevBtn.grid(row = 8, column = 2, sticky = W+N)
         self.nextBtn = Button(self.frame, text='Next >>', width = 10, command = self.nextImage, state = DISABLED)
         self.nextBtn.grid(row = 8, column = 3, sticky = W+N)
-        self.deLabelBtn = Button(self.frame, text='Delete-Label', width = 10, command = self.deleteLabel, state = DISABLED)
-        self.deLabelBtn.grid(row = 8, column = 4, sticky = W+N)
-        self.disp = Label(self.frame, text='')
-        self.disp.grid(row = 8, column = 5, sticky = E+N)
-
 
     # [Button Function]   
-    def setEtiology_L(self):
+    def setEtiologyBtn_L(self):
         self.etiologyBtn_L_1.config(state=NORMAL)
         self.etiologyBtn_L_2.config(state=NORMAL)
         self.etiologyBtn_L_3.config(state=NORMAL)
         self.etiologyBtn_L_4.config(state=NORMAL)
         self.etiologyBtn_L_5.config(state=NORMAL)
+        self.etiologyBtn_L_6.config(state=NORMAL)
         
-    def setGrade_L(self):
+    def setGradeBtn_L(self):
         self.gradeBtn_L_1.config(state=NORMAL)
         self.gradeBtn_L_2.config(state=NORMAL)
         self.gradeBtn_L_3.config(state=NORMAL)
@@ -226,14 +202,15 @@ class LabelTool():
         self.gradeBtn_L_5.config(state=NORMAL)
         self.gradeBtn_L_6.config(state=NORMAL)
 
-    def setEtiology_R(self):
+    def setEtiologyBtn_R(self):
         self.etiologyBtn_R_1.config(state=NORMAL)
         self.etiologyBtn_R_2.config(state=NORMAL)
         self.etiologyBtn_R_3.config(state=NORMAL)
         self.etiologyBtn_R_4.config(state=NORMAL)
         self.etiologyBtn_R_5.config(state=NORMAL)
+        self.etiologyBtn_R_6.config(state=NORMAL)
         
-    def setGrade_R(self):
+    def setGradeBtn_R(self):
         self.gradeBtn_R_1.config(state=NORMAL)
         self.gradeBtn_R_2.config(state=NORMAL)
         self.gradeBtn_R_3.config(state=NORMAL)
@@ -242,31 +219,33 @@ class LabelTool():
         self.gradeBtn_R_6.config(state=NORMAL)
 
     # Valid list for entry object to restrict some characters.
-    '''
     def validate(self, action, index, value_if_allowed, prior_value, text, validation_type, trigger_type, widget_name):
-        if text in 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ ':
+        if text in 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789':
             try:
                 return True
             except ValueError:
                 return False
         else:
             return False
-    '''
 
     # [Control GUI]
-    def enClrSavGUI(self):
-        self.btnClear.config(state=NORMAL)
+    def enBtn(self):
+        self.clrBtn.config(state=NORMAL)
         self.doneBtn.config(state=NORMAL)
+        self.prevBtn.config(state=NORMAL)
+        self.nextBtn.config(state=NORMAL)
+        self.skipBtn.config(state=NORMAL)
+        self.gotoBtn.config(state=NORMAL)
 
     def reRadioBtn(self):
         self.etiology_L.set(None)
         self.etiology_R.set(None)
         self.grades_L.set(None)
         self.grades_R.set(None)
-        self.setEtiology_L()
-        self.setEtiology_R()
-        self.setGrade_L()
-        self.setGrade_R()
+        self.setEtiologyBtn_L()
+        self.setEtiologyBtn_R()
+        self.setGradeBtn_L()
+        self.setGradeBtn_R()
 
     def disRadioBtn(self):
         self.etiologyBtn_L_1.config(state=DISABLED)
@@ -274,6 +253,7 @@ class LabelTool():
         self.etiologyBtn_L_3.config(state=DISABLED)
         self.etiologyBtn_L_4.config(state=DISABLED)
         self.etiologyBtn_L_5.config(state=DISABLED)
+        self.etiologyBtn_L_6.config(state=DISABLED)
         self.gradeBtn_L_1.config(state=DISABLED)
         self.gradeBtn_L_2.config(state=DISABLED)
         self.gradeBtn_L_3.config(state=DISABLED)
@@ -285,6 +265,7 @@ class LabelTool():
         self.etiologyBtn_R_3.config(state=DISABLED)
         self.etiologyBtn_R_4.config(state=DISABLED)
         self.etiologyBtn_R_5.config(state=DISABLED)
+        self.etiologyBtn_R_6.config(state=DISABLED)
         self.gradeBtn_R_1.config(state=DISABLED)
         self.gradeBtn_R_2.config(state=DISABLED)
         self.gradeBtn_R_3.config(state=DISABLED)
@@ -292,35 +273,27 @@ class LabelTool():
         self.gradeBtn_R_5.config(state=DISABLED)
         self.gradeBtn_R_6.config(state=DISABLED)
 
+    def disCanvas(self):
+        self.mainPanel.delete(ALL)
+        self.matchimgPanel.delete(ALL)
+        self.subPanel_L.delete(ALL)
+        self.subPanel_R.delete(ALL)
+
     def initStateGUI(self):
         self.disRadioBtn()
-        self.btnClear.config(state=DISABLED)
+        self.clrBtn.config(state=DISABLED)
         self.doneBtn.config(state=DISABLED)
         self.prevBtn.config(state=DISABLED)
         self.nextBtn.config(state=DISABLED)
-        self.deLabelBtn.config(state=DISABLED)
-
-    def enPreNexGUI(self):
-        self.prevBtn.config(state=NORMAL)
-        self.nextBtn.config(state=NORMAL)
-        #self.deLabelBtn.config(state=NORMAL)
-
 
     # [Load Image]
     def selectSrcDir(self):
         path = filedialog.askdirectory(title="Select image source folder", initialdir=self.svSourcePath.get())
         self.svSourcePath.set(path)
-        self.loadUnLabelImg()
+        self.initLoadImg()
         return
-    '''
-    def selectLoadDir(self):
-        path = filedialog.askdirectory(title="Select image source folder", initialdir=self.svLoadPath.get())
-        self.svLoadPath.set(path)
-        self.loadLabeledImg()
-        return
-    '''
-    def loadUnLabelImg(self):
-        self.loadLabelOnly = 0
+
+    def initLoadImg(self):
         self.parent.focus()
 
         if not os.path.isdir(self.svSourcePath.get()):
@@ -334,18 +307,17 @@ class LabelTool():
         
         # count total before deduction done list
         self.cur   = 1
-        self.count = 1
         self.total = len(self.idArray.loc[:,])
 
         _imgDirList     = (fileDir + '/original/').split() * self.total
-        _imgIdList      = self.idArray['PatientID'].tolist()
+        self.imgIdList      = self.idArray['PatientID'].tolist()
         _matchimgIdList = self.idArray['MatchId'].tolist()
         _filenameExt    = '.jpg'.split() * self.total        
-        self.imageList      = [x+y+z for x,y,z in zip(_imgDirList, _imgIdList, _filenameExt)]
+        self.imageList      = [x+y+z for x,y,z in zip(_imgDirList, self.imgIdList, _filenameExt)]
         self.matchimageList = [x+y+z for x,y,z in zip(_imgDirList, _matchimgIdList, _filenameExt)]
-        print('>>>>>>', self.imageList)
+
         # set up output label dir the same as svSourcePath
-        self.outDir = fileDir + '/Labels'
+        self.outDir = fileDir + '/labels'
         if not os.path.exists(self.outDir):
             os.mkdir(self.outDir)
         
@@ -360,82 +332,23 @@ class LabelTool():
                 for j, full in enumerate(self.imageList):
                     if name.split('.')[0] in full:
                         doneList.append(full)
-            undoneList = [i for i in self.imageList if not i in doneList or doneList.remove(i)]
-            self.imageList = undoneList
 
-        self.undone = len(self.imageList)
-        if self.undone == 0:
+        self.cur = len(doneList) + 1
+        if self.cur == self.total + 1:
             self.labelFinished()
         else:
             self.loadImage()
-        print('%d images loaded from %s, still %s undone' %(self.total, fileDir, self.undone))
+        print('%d images loaded from %s, %s images have been annotated' %(self.total, fileDir, self.cur-1))
         
         self.initStateGUI()
         self.reRadioBtn()
-        self.enPreNexGUI()
-        self.enClrSavGUI()
-    '''
-    def loadLabeledImg(self):
-        self.loadLabelOnly = 1
-        self.parent.focus()
-        self.imageDir = self.svLoadPath.get()
-        self.imageList = []
-        if not os.path.isdir(self.imageDir):
-            messagebox.showerror("Error!", message = "The specified dir doesn't exist!")
-            return
-
-        windowtlist = ["*.JPEG", "*.JPG", "*.PNG", "*.BMP"]
-        otherOslist = ["*.JPEG", "*.jpeg", "*.JPG", "*.jpg", "*.PNG", "*.png", "*.BMP", "*.bmp"]
-        if platform.system() == 'Windows':
-            extlist = windowtlist
-        else:
-            extlist = otherOslist
-
-        for e in extlist:
-            filelist = glob.glob(os.path.join(self.imageDir, e))
-            self.imageList.extend(filelist)
-
-        if len(self.imageList) == 0:
-            messagebox.showerror("Error!", message = "No images found in the specified dir!")
-            return
-
-        # count total before deduction done list
-        self.cur = 1
-        self.count = 1
-        self.total = len(self.imageList)
-        self.imageList.sort()
-
-        # set up output label dir the same as svSourcePath
-        self.outDir = self.svLoadPath.get() + '/Labels'
-        if not os.path.exists(self.outDir):
-            messagebox.showerror("Error!", message = "No Labels!")
-            return
-
-        # load json file, compare images file list with json
-        doneList = []
-        labeled_json = self.outDir + '/'
-        json_files = [pos_json for pos_json in os.listdir(labeled_json) if pos_json.endswith('.json')]
-        if len(json_files) > 0:
-            for i, name in enumerate(json_files):
-                for j, full in enumerate(self.imageList):
-                    if name.split('.')[0] in full:
-                        doneList.append(full)
-
-        if len(doneList) == 0:
-            messagebox.showerror("Error!", message = "No images has been labeled!")
-            return
-        self.imageList = doneList
-        self.loadImage()
-        self.enPreNexGUI()
-        self.reRadioBtn()
-        self.loadLabel()
-        '''
+        self.enBtn()
+    
     def loadImage(self):
-        # load image & directory information
-        # load image to main panel canvas
+        self.disCanvas()
+
         imagepath      = self.imageList[self.cur - 1]
         matchimagepath = self.matchimageList[self.cur -1]
-
 
         matchimagepath_list = matchimagepath.split('/')
         matchimgID = matchimagepath_list.pop()
@@ -460,7 +373,6 @@ class LabelTool():
         else:
             self.factor = long_side / size[1]
             self.img = self.img.resize((int(size[0]*self.factor), 500))
-        #print('Resize factor = ', self.factor, ' Original size = ', size, ' Current size = ', self.img.size)
 
         self.tkimg = ImageTk.PhotoImage(self.img)
         self.mainPanel.config(width = max(self.tkimg.width(), PSIZE), height = max(self.tkimg.height(), PSIZE))
@@ -494,8 +406,8 @@ class LabelTool():
                 self.subPanel_R.config(width = 300, height = 300)
                 self.subPanel_R.create_image(0, 0, image = self.tkimg_R, anchor=NW)
         else:
-            self.subPanel_L.delete('all')
-            self.subPanel_R.delete('all')
+            self.subPanel_L.delete(ALL)
+            self.subPanel_R.delete(ALL)
 
         if os.path.isfile(matchimagepath):
             with Image.open(matchimagepath) as matchImg:
@@ -514,14 +426,9 @@ class LabelTool():
                 self.matchimgPanel.config(width = 300, height = 300)            
                 self.matchimgPanel.create_image(0, 0, image = self.tkimg_match, anchor=NW)
         else:
-            self.matchimgPanel.delete('all')
+            self.matchimgPanel.delete(ALL)
 
-
-        if self.loadLabelOnly == 1:
-            self.progLabel.config(text = "%04d/%04d" %(self.cur, len(self.imageList)))
-        else:
-            self.progLabel.config(text = "%04d/%04d" %(self.cur, self.undone))
-        
+        self.progLabel.config(text = "%04d/%04d" %(self.cur, self.total))
         self.imagename = image_id
         self.filenameLabel.config(text = "PatientID : %s" %(self.imagename))
 
@@ -530,15 +437,13 @@ class LabelTool():
         imagepath_list = imagepath.split('/')
         image_id = imagepath_list.pop()
         image_id = image_id[:-4]
-        self.imagename = image_id
-        self.filenameLabel.config(text = "PatientID : %s" %(self.imagename))
-       
+        imagepath_list.pop()
+        
         def listToString(li):  
             str1 = '/'
             return (str1.join(li)) 
         
-        LabelFile = listToString(imagepath_list) + '/Labels/' + image_id + '.json'
-
+        LabelFile = listToString(imagepath_list) + '/labels/' + image_id + '.json'
         if os.path.isfile(LabelFile):
             with open(LabelFile, 'r') as f:
                 data = json.load(f)
@@ -547,33 +452,34 @@ class LabelTool():
                 self.grades_L.set(data[self.imagename]['grades_l'])
                 self.grades_R.set(data[self.imagename]['grades_r'])
 
-            
-    def prevImage(self, event = None):
+    def prevImage(self):
         if self.cur > 1:
             self.reRadioBtn()
             self.cur -= 1
             self.loadImage()
             self.loadLabel()
 
-    def nextImage(self, event = None):
+    def nextImage(self):
         if self.cur < len(self.imageList):
             self.reRadioBtn()
             self.cur += 1
             self.loadImage()
             self.loadLabel()
 
-    def deleteLabel(self):
-        self.mainPanel.delete('all')
-        self.subPanel_L.delete('all')
-        self.subPanel_R.delete('all')
-        self.reRadioBtn()
-        self.disRadioBtn()
-        LabelFile = self.svLoadPath.get() + '/Labels/' + self.imagename + '.json'
-        os.remove(LabelFile)
-        print('Image No. %s Label has been deleted.' %(self.imagename))
+    def gotoImage(self):
+        gotoImageID =  self.gotoText.get()
 
-    def confirmPhoto(self):
-        # must complete label before pressing save button
+        if len(gotoImageID) == 0:
+            return
+        elif gotoImageID in self.imgIdList:
+            self.reRadioBtn()
+            self.cur = self.imgIdList.index(gotoImageID) + 1
+            self.loadImage()
+            self.loadLabel()
+        else:
+            return
+        
+    def confirmImage(self):
         if (self.grades_L.get() == 'None') or (self.grades_R.get() == 'None') \
             or (self.etiology_L.get() == 'None') or (self.etiology_R.get() == 'None'):
             return
@@ -582,39 +488,12 @@ class LabelTool():
         self.reRadioBtn()
         self.loadLabel()
 
-
-    def popup_ok(self):
-        self.popupWindow.destroy()
-        if self.WindwType == 'BBOX_OK':
-            self.reRadioBtn()
-            self.disRadioBtn()
-            self.enClrSavGUI()
-        else:
-            self.updateImageDic()
-
-    def popup_cancel(self):
-        self.popupWindow.destroy()
+    def skipImage(self):
         self.reRadioBtn()
-        self.enClrSavGUI()
-        if self.WindwType == 'BBOX_OK':
-            self.popLastList()
-            self.bboxBtn.config(state=NORMAL)
-    
-    def appendToList(self):
-        self.classList.append(self.infoClass)
-        self.ageList.append(self.infoAge)
-
-    def popLastList(self):
-        self.classList = self.classList[:-1]
-        self.ageList = self.ageList[:-1]
-
-    def printAllList(self):
-        print(self.imgInfo)
-        print(self.classList)
-        print(self.ageList)
+        self.updateImageDic()
+        self.loadLabel()
 
     def updateImageDic(self):
-        print (">>>> updateImageDic")
         img_dict = {}
         data = {}
         
@@ -628,13 +507,11 @@ class LabelTool():
         self.labelfilename = self.outDir + '/' + self.imagename +  '.json'
         with open(self.labelfilename, 'w') as outfile:
             json.dump(img_dict, outfile, indent = 4)
-        print('Image No. %d saved' %(self.cur))
-        print ('cur:', self.cur, 'count: ', self.count)
+        print('PatientID %s saved' %(self.imagename))
 
         self.imgInfo = []
         self.cur += 1
-        self.count += 1
-        if self.cur <= self.undone:
+        if self.cur <= self.total:
             self.loadImage()
         else:
             self.labelFinished()
