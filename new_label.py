@@ -175,15 +175,17 @@ class LabelTool():
         
         # >>>>>>> [BOTTOM PART] <<<<<<<
         # control panel for image navigation
-        self.progLabel = Label(self.frame, text = "Progress:     /    ")
-        self.progLabel.grid(row = 8, column = 0, sticky = W+N)
+        self.progLb = Label(self.frame, text = "Progress:     /    ")
+        self.progLb.grid(row = 8, column = 0, sticky = SW)
         self.filenameLabel = Label(self.frame, text = "PatientID:")
-        self.filenameLabel.grid(row = 8, column = 1, sticky = W+N)
+        self.filenameLabel.grid(row = 8, column = 1, sticky = SW)
         self.filenameLabel.config(font=("Helvetica", 16))
         self.prevBtn = Button(self.frame, text='<< Prev', width = 10, command = self.prevImage, state = DISABLED)
-        self.prevBtn.grid(row = 8, column = 2, sticky = W+N)
+        self.prevBtn.grid(row = 8, column = 2, sticky = SW)
         self.nextBtn = Button(self.frame, text='Next >>', width = 10, command = self.nextImage, state = DISABLED)
-        self.nextBtn.grid(row = 8, column = 3, sticky = W+N)
+        self.nextBtn.grid(row = 8, column = 3, sticky = SW)
+        self.statusLb = Label(self.frame, text = 'Unlabeled')
+        self.statusLb.grid(row = 8, column = 4, sticky = SW)
 
     # [Button Function]   
     def setEtiologyBtn_L(self):
@@ -428,7 +430,7 @@ class LabelTool():
         else:
             self.matchimgPanel.delete(ALL)
 
-        self.progLabel.config(text = "%04d/%04d" %(self.cur, self.total))
+        self.progLb.config(text = "%04d/%04d" %(self.cur, self.total))
         self.imagename = image_id
         self.filenameLabel.config(text = "PatientID : %s" %(self.imagename))
 
@@ -447,10 +449,23 @@ class LabelTool():
         if os.path.isfile(LabelFile):
             with open(LabelFile, 'r') as f:
                 data = json.load(f)
-                self.etiology_L.set(data[self.imagename]['etiology_l'])
-                self.etiology_R.set(data[self.imagename]['etiology_r'])
-                self.grades_L.set(data[self.imagename]['grades_l'])
-                self.grades_R.set(data[self.imagename]['grades_r'])
+                etiology_L = data[self.imagename]['etiology_l']
+                etiology_R = data[self.imagename]['etiology_r']
+                grades_L = data[self.imagename]['grades_l']
+                grades_R = data[self.imagename]['grades_r']
+
+                if (etiology_L == 'None') or (etiology_R == 'None') \
+                    or (grades_L == 'None') or (grades_R == 'None'):
+                    self.statusLb.config(text='Labeled as Unknown Annotation')
+                else:
+                    self.statusLb.config(text='Labeled')
+
+                self.etiology_L.set(etiology_L)
+                self.etiology_R.set(etiology_R)
+                self.grades_L.set(grades_L)
+                self.grades_R.set(grades_R)
+        else:
+            self.statusLb.config(text='Unlabeled')
 
     def prevImage(self):
         if self.cur > 1:
