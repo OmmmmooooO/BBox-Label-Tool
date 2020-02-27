@@ -22,7 +22,7 @@ class LabelTool():
         self.parent.resizable(width = FALSE, height = FALSE)
 
         # initialize global state
-        self.imageList = []
+        self.imgPathList = []
         self.outDir = ''
         self.cur = 0
         self.total = 0
@@ -79,6 +79,10 @@ class LabelTool():
         self.etiologyBtn_L_5.pack(padx=10, pady=4, anchor=NW)
         self.etiologyBtn_L_6 = Radiobutton(self.BtnPanel_L, text='Fracture', variable=self.etiology_L, value='5', command = self.setEtiologyBtn_L, state = DISABLED)
         self.etiologyBtn_L_6.pack(padx=10, pady=4, anchor=NW)
+        self.etiologyBtn_L_7 = Radiobutton(self.BtnPanel_L, text='Normal', variable=self.etiology_L, value='6', command = self.setEtiologyBtn_L, state = DISABLED)
+        self.etiologyBtn_L_7.pack(padx=10, pady=4, anchor=NW)
+        self.etiologyBtn_L_8 = Radiobutton(self.BtnPanel_L, text='Joint or nail', variable=self.etiology_L, value='7', command = self.setEtiologyBtn_L, state = DISABLED)
+        self.etiologyBtn_L_8.pack(padx=10, pady=4, anchor=NW)
 
         # radio button: Grade
         self.gradeLb_L = Label(self.BtnPanel_L, text = 'Grade:')
@@ -122,7 +126,6 @@ class LabelTool():
         self.gotoBtn = Button(self.GotoPanel, text = 'GO', width = 5, height = 1, command = self.gotoImage, state = DISABLED)
         self.gotoBtn.pack(anchor=NW)
 
-
         self.BtnPanel_R = Frame(self.frame)
         self.BtnPanel_R.grid(row = 4, column = 0, rowspan = 4, sticky = NE)
         self.sideLb_R = Label(self.BtnPanel_R, text = 'Right')
@@ -146,6 +149,10 @@ class LabelTool():
         self.etiologyBtn_R_5.pack(padx=10, pady=4, anchor=NW)
         self.etiologyBtn_R_6 = Radiobutton(self.BtnPanel_R, text='Fracture', variable=self.etiology_R, value='5', command = self.setEtiologyBtn_R, state = DISABLED)
         self.etiologyBtn_R_6.pack(padx=10, pady=4, anchor=NW)
+        self.etiologyBtn_R_7 = Radiobutton(self.BtnPanel_R, text='Normal', variable=self.etiology_R, value='6', command = self.setEtiologyBtn_R, state = DISABLED)
+        self.etiologyBtn_R_7.pack(padx=10, pady=4, anchor=NW)
+        self.etiologyBtn_R_8 = Radiobutton(self.BtnPanel_R, text='Joint or nail', variable=self.etiology_R, value='7', command = self.setEtiologyBtn_R, state = DISABLED)
+        self.etiologyBtn_R_8.pack(padx=10, pady=4, anchor=NW)
         
         # radio button: Grade
         self.gradeLb_R = Label(self.BtnPanel_R, text = 'Grade:')
@@ -195,6 +202,8 @@ class LabelTool():
         self.etiologyBtn_L_4.config(state=NORMAL)
         self.etiologyBtn_L_5.config(state=NORMAL)
         self.etiologyBtn_L_6.config(state=NORMAL)
+        self.etiologyBtn_L_7.config(state=NORMAL)
+        self.etiologyBtn_L_8.config(state=NORMAL)
         
     def setGradeBtn_L(self):
         self.gradeBtn_L_1.config(state=NORMAL)
@@ -211,6 +220,8 @@ class LabelTool():
         self.etiologyBtn_R_4.config(state=NORMAL)
         self.etiologyBtn_R_5.config(state=NORMAL)
         self.etiologyBtn_R_6.config(state=NORMAL)
+        self.etiologyBtn_R_7.config(state=NORMAL)
+        self.etiologyBtn_R_8.config(state=NORMAL)
         
     def setGradeBtn_R(self):
         self.gradeBtn_R_1.config(state=NORMAL)
@@ -256,6 +267,8 @@ class LabelTool():
         self.etiologyBtn_L_4.config(state=DISABLED)
         self.etiologyBtn_L_5.config(state=DISABLED)
         self.etiologyBtn_L_6.config(state=DISABLED)
+        self.etiologyBtn_L_7.config(state=DISABLED)
+        self.etiologyBtn_L_8.config(state=DISABLED)
         self.gradeBtn_L_1.config(state=DISABLED)
         self.gradeBtn_L_2.config(state=DISABLED)
         self.gradeBtn_L_3.config(state=DISABLED)
@@ -268,6 +281,8 @@ class LabelTool():
         self.etiologyBtn_R_4.config(state=DISABLED)
         self.etiologyBtn_R_5.config(state=DISABLED)
         self.etiologyBtn_R_6.config(state=DISABLED)
+        self.etiologyBtn_R_7.config(state=DISABLED)
+        self.etiologyBtn_R_8.config(state=DISABLED)
         self.gradeBtn_R_1.config(state=DISABLED)
         self.gradeBtn_R_2.config(state=DISABLED)
         self.gradeBtn_R_3.config(state=DISABLED)
@@ -303,39 +318,38 @@ class LabelTool():
             return
 
         fileDir = self.svSourcePath.get()
-        xlsDir = os.path.join(fileDir, 'HumanOA_Annotation_masterTable_0225_2020.xls')
-        df = pd.read_excel(open(xlsDir,'rb'), sheet_name=0)
-        self.idArray = df.loc[:,['PatientID', 'MatchId']].dropna()
-        
-        # count total before deduction done list
-        self.cur   = 1
-        self.total = len(self.idArray.loc[:,])
 
-        _imgDirList     = (fileDir + '/original/').split() * self.total
-        self.imgIdList      = self.idArray['PatientID'].tolist()
-        _matchimgIdList = self.idArray['MatchId'].tolist()
-        _filenameExt    = '.jpg'.split() * self.total        
-        self.imageList      = [x+y+z for x,y,z in zip(_imgDirList, self.imgIdList, _filenameExt)]
-        self.matchimageList = [x+y+z for x,y,z in zip(_imgDirList, _matchimgIdList, _filenameExt)]
-
-        # set up output label dir the same as svSourcePath
+        # set up output label diretory
         self.outDir = fileDir + '/labels'
         if not os.path.exists(self.outDir):
             os.mkdir(self.outDir)
         
-        # load json file, compare images file list with json
-        doneList = []
-        undoneList = []
-        labeled_json = self.outDir + '/'
-        json_files = [pos_json for pos_json in os.listdir(labeled_json) if pos_json.endswith('.json')]
+        # dirty work
+        # json
+        labelDir = self.outDir + '/'
+        labelIDList = [os.path.splitext(pos_json)[0] for pos_json in os.listdir(labelDir) if pos_json.endswith('.json')]
+        self.cur = len(labelIDList) + 1
 
-        if len(json_files) > 0:
-            for i, name in enumerate(json_files):
-                for j, full in enumerate(self.imageList):
-                    if name.split('.')[0] in full:
-                        doneList.append(full)
+        # xls
+        xlsDir = os.path.join(fileDir, 'HumanOA_Annotation_masterTable_0225_2020.xls')
+        df = pd.read_excel(open(xlsDir,'rb'), sheet_name=0)
+        self.masterTable = df.loc[:,['PatientID', 'MatchId']]
+        labelTable = self.masterTable.copy()
+        unlabelTable = self.masterTable.copy()
+        labelTable = labelTable[labelTable['PatientID'].isin(labelIDList)]
+        unlabelTable = unlabelTable[~unlabelTable['PatientID'].isin(labelIDList)]
+        self.masterTable = pd.concat([labelTable, unlabelTable], ignore_index=True, sort =False)
+        
+        self.total = len(self.masterTable)
+        self.masterTable['MatchId'] = self.masterTable['MatchId'].fillna('None')
+        self.imgIDList = self.masterTable['PatientID'].tolist()
 
-        self.cur = len(doneList) + 1
+        # make image path list
+        self.imgParDir = fileDir + '/original/'
+        _imgParDirList = self.imgParDir.split() * self.total
+        _imgNameExtList = '.jpg'.split() * self.total       
+        self.imgPathList = [x+y+z for x,y,z in zip(_imgParDirList, self.imgIDList, _imgNameExtList)]
+        
         if self.cur == self.total + 1:
             self.labelFinished()
         else:
@@ -349,16 +363,17 @@ class LabelTool():
     def loadImage(self):
         self.disCanvas()
 
-        imagepath      = self.imageList[self.cur - 1]
-        matchimagepath = self.matchimageList[self.cur -1]
-
-        matchimagepath_list = matchimagepath.split('/')
-        matchimgID = matchimagepath_list.pop()
-        matchimgID = matchimgID[:-4]
-        self.matchID = "Match ID: " + matchimgID
-        self.matchIDLb.config(text=self.matchID)
-
+        imagepath  = self.imgPathList[self.cur - 1]
         self.imgInfo.append(imagepath)
+        matchimgID = self.masterTable.at[self.cur-1, 'MatchId']
+        matchimgpath = ''
+
+        if matchimgID != 'None':
+            matchimgpath = self.imgParDir + matchimgID + '.jpg'
+            self.matchID = "Match ID: " + matchimgID
+        else:
+            self.matchID = "No match image"
+        self.matchIDLb.config(text=self.matchID)
 
         if not os.path.isfile(imagepath):
             print('>>>>>>Image {} does not exist.<<<<<<'.format(imagepath))
@@ -411,8 +426,8 @@ class LabelTool():
             self.subPanel_L.delete(ALL)
             self.subPanel_R.delete(ALL)
 
-        if os.path.isfile(matchimagepath):
-            with Image.open(matchimagepath) as matchImg:
+        if os.path.isfile(matchimgpath):
+            with Image.open(matchimgpath) as matchImg:
                 self.matchImg = matchImg
                 size = self.matchImg.size
                 long_side = 300
@@ -435,7 +450,7 @@ class LabelTool():
         self.filenameLabel.config(text = "PatientID : %s" %(self.imagename))
 
     def loadLabel(self):
-        imagepath = self.imageList[self.cur - 1]
+        imagepath = self.imgPathList[self.cur - 1]
         imagepath_list = imagepath.split('/')
         image_id = imagepath_list.pop()
         image_id = image_id[:-4]
@@ -475,7 +490,7 @@ class LabelTool():
             self.loadLabel()
 
     def nextImage(self):
-        if self.cur < len(self.imageList):
+        if self.cur < len(self.imgPathList):
             self.reRadioBtn()
             self.cur += 1
             self.loadImage()
@@ -486,9 +501,9 @@ class LabelTool():
 
         if len(gotoImageID) == 0:
             return
-        elif gotoImageID in self.imgIdList:
-            self.reRadioBtn()
-            self.cur = self.imgIdList.index(gotoImageID) + 1
+        elif gotoImageID in self.imgIDList:
+            self.initLoadImg()
+            self.cur = self.imgIDList.index(gotoImageID) + 1
             self.loadImage()
             self.loadLabel()
         else:
