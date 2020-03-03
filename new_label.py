@@ -26,7 +26,7 @@ class LabelTool():
         self.outDir = ''
         self.cur = 0
         self.total = 0
-        self.imagename = ''
+        self.imageID = ''
         self.labelfilename = ''
         self.tkimg = None
         self.imgInfo = []
@@ -365,12 +365,12 @@ class LabelTool():
 
         imagepath  = self.imgPathList[self.cur - 1]
         self.imgInfo.append(imagepath)
-        matchimgID = self.masterTable.at[self.cur-1, 'MatchId']
+        self.matchimgID = self.masterTable.at[self.cur-1, 'MatchId']
         matchimgpath = ''
 
-        if matchimgID != 'None':
-            matchimgpath = self.imgParDir + matchimgID + '.jpg'
-            self.matchID = "Match ID: " + matchimgID
+        if self.matchimgID != 'None':
+            matchimgpath = self.imgParDir + self.matchimgID + '.jpg'
+            self.matchID = "Match ID: " + self.matchimgID
         else:
             self.matchID = "No match image"
         self.matchIDLb.config(text=self.matchID)
@@ -397,15 +397,15 @@ class LabelTool():
 
         # load image to sub panel canvas
         imagepath_list = imagepath.split('/')
-        image_id = imagepath_list.pop()
-        image_id = image_id[:-4]
+        _image_id = imagepath_list.pop()
+        _image_id = _image_id[:-4]
         imagepath_list.pop()
         
         def listToString(li):  
             str1 = '/'
             return (str1.join(li)) 
         
-        subimagepath_L = listToString(imagepath_list) + '/crop/' + image_id + '_R.jpg'
+        subimagepath_L = listToString(imagepath_list) + '/crop/' + _image_id + '_R.jpg'
         subimagepath_R = subimagepath_L[:-5] + 'L.jpg'
 
         if (os.path.isfile(subimagepath_R) and os.path.isfile(subimagepath_L)):
@@ -446,8 +446,8 @@ class LabelTool():
             self.matchimgPanel.delete(ALL)
 
         self.progLb.config(text = "%04d/%04d" %(self.cur, self.total))
-        self.imagename = image_id
-        self.filenameLabel.config(text = "PatientID : %s" %(self.imagename))
+        self.imageID = _image_id
+        self.filenameLabel.config(text = "PatientID : %s" %(self.imageID))
 
     def loadLabel(self):
         imagepath = self.imgPathList[self.cur - 1]
@@ -464,10 +464,10 @@ class LabelTool():
         if os.path.isfile(LabelFile):
             with open(LabelFile, 'r') as f:
                 data = json.load(f)
-                etiology_L = data[self.imagename]['etiology_l']
-                etiology_R = data[self.imagename]['etiology_r']
-                grades_L = data[self.imagename]['grades_l']
-                grades_R = data[self.imagename]['grades_r']
+                etiology_L = data[self.imageID]['etiology_l']
+                etiology_R = data[self.imageID]['etiology_r']
+                grades_L = data[self.imageID]['grades_l']
+                grades_R = data[self.imageID]['grades_r']
 
                 if (etiology_L == 'None') or (etiology_R == 'None') \
                     or (grades_L == 'None') or (grades_R == 'None'):
@@ -527,17 +527,19 @@ class LabelTool():
         img_dict = {}
         data = {}
         
-        data['path'] = self.imgInfo[0]
+        data['path'] = self.imgInfo[-1]
+        data['imageid'] = self.imageID
+        data['matchid'] = self.matchimgID
         data['etiology_r'] = self.etiology_R.get()
         data['grades_r'] = self.grades_R.get()
         data['etiology_l'] = self.etiology_L.get()
         data['grades_l'] = self.grades_L.get()
 
-        img_dict[self.imagename] = data
-        self.labelfilename = self.outDir + '/' + self.imagename +  '.json'
+        img_dict[self.imageID] = data
+        self.labelfilename = self.outDir + '/' + self.imageID +  '.json'
         with open(self.labelfilename, 'w') as outfile:
             json.dump(img_dict, outfile, indent = 4)
-        print('PatientID %s saved' %(self.imagename))
+        print('PatientID %s saved' %(self.imageID))
 
         self.imgInfo = []
         self.cur += 1
