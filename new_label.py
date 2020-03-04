@@ -8,6 +8,7 @@ import os
 import glob
 import json
 import pandas as pd
+import time
 
 # panel size for init
 PSIZE = 500
@@ -364,6 +365,7 @@ class LabelTool():
         self.disCanvas()
 
         imagepath  = self.imgPathList[self.cur - 1]
+        self.imgInfo.clear
         self.imgInfo.append(imagepath)
         self.matchimgID = self.masterTable.at[self.cur-1, 'MatchId']
         matchimgpath = ''
@@ -534,6 +536,7 @@ class LabelTool():
         data['grades_r'] = self.grades_R.get()
         data['etiology_l'] = self.etiology_L.get()
         data['grades_l'] = self.grades_L.get()
+        data['time'] = time.strftime("%b/%d/%X", time.localtime()) 
 
         img_dict[self.imageID] = data
         self.labelfilename = self.outDir + '/' + self.imageID +  '.json'
