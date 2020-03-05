@@ -3,7 +3,6 @@ from tkinter import filedialog
 from tkinter import messagebox
 from tkinter import Toplevel
 from PIL import Image, ImageTk
-import datetime
 import os
 import glob
 import json
