@@ -560,9 +560,42 @@ class LabelTool():
         ExitBtn = Button(FinishWindow, text="Exit", height=4, command = root.destroy)
         ExitBtn.pack()
 
+def jsontocsv():
+    json_list = glob.glob(os.path.join(os.getcwd(), 'DoctorA', 'labels','*.json'))
+    lookupTable_eti = {'None':'Unknown Annotation', '0':'Osteonecrosis', '1':'Avascular necrosis', '2':'Osteoarthritis', \
+                        '3':'Femoroacetabular impingement', '4':'others', '5':'Fracture', '6':'Normal', '7':'Joint or nail'}
+    lookupTable_grade = {'None':'Unknown Annotation', '0':'1', '1':'2', '2':'3', '3':'4', '4':'5', '5':'Not specified'}
+    
+    outputDF = pd.DataFrame(columns=['PatientID','MatchID','Etiology_right','Grades_right','Etiology_left','Grades_left','time', 'file_path'])
+
+    for i in range(len(json_list)):
+        df = pd.read_json(json_list[i], orient='values')
+        image_id = json_list[i].split('/')[-1][:-5]
+        
+        img_id   = df[image_id]['imageid']
+        match_id = df[image_id]['matchid']
+        eti_r    = df[image_id]['etiology_r']
+        grades_r = df[image_id]['grades_r']
+        eti_l    = df[image_id]['etiology_l']
+        grades_l = df[image_id]['grades_l']
+        time     = df[image_id]['time']
+        path     = df[image_id]['path']
+       
+        eti_r    = lookupTable_eti[eti_r]
+        grades_r = lookupTable_grade[grades_r]
+        eti_l    = lookupTable_eti[eti_l]
+        grades_l = lookupTable_grade[grades_l]
+
+        new_row = [img_id, match_id, eti_r, grades_r, eti_l, grades_l, time, path]
+        
+        outputDF = outputDF.append(pd.DataFrame([new_row], columns = outputDF.columns))
+
+    outputDF.to_csv("export.csv", index=False)
+    print('export all json files to report.csv')
 
 if __name__ == '__main__':
     root = Tk()
     tool = LabelTool(root)
     root.resizable(width =  True, height = True)
     root.mainloop()
+    jsontocsv()
