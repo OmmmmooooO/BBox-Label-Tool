@@ -561,13 +561,15 @@ class LabelTool():
 
 def jsontocsv():
     json_list = glob.glob(os.path.join(os.getcwd(), 'DoctorA', 'labels','*.json'))
+    json_cnt  = len(json_list) 
+
     lookupTable_eti = {'None':'Unknown Annotation', '0':'Osteonecrosis', '1':'Avascular necrosis', '2':'Osteoarthritis', \
                         '3':'Femoroacetabular impingement', '4':'others', '5':'Fracture', '6':'Normal', '7':'Joint or nail'}
     lookupTable_grade = {'None':'Unknown Annotation', '0':'1', '1':'2', '2':'3', '3':'4', '4':'5', '5':'Not specified'}
     
     outputDF = pd.DataFrame(columns=['PatientID','MatchID','Etiology_right','Grades_right','Etiology_left','Grades_left','time', 'file_path'])
 
-    for i in range(len(json_list)):
+    for i in range(json_cnt):
         df = pd.read_json(json_list[i], orient='values')
         image_id = json_list[i].split('/')[-1][:-5]
         
@@ -589,8 +591,15 @@ def jsontocsv():
         
         outputDF = outputDF.append(pd.DataFrame([new_row], columns = outputDF.columns))
 
+    xlsDF       = pd.read_excel(open(os.path.join(os.getcwd(), 'DoctorA', 'HumanOA_Annotation_masterTable_0225_2020.xls'),'rb'), sheet_name=0)
+    masterTable = xlsDF.loc[:,['PatientID']]
+
+    outputDF = outputDF.set_index('PatientID')
+    outputDF = outputDF.reindex(index=masterTable['PatientID'])
+    outputDF = outputDF.reset_index()
     outputDF.to_csv("export.csv", index=False)
-    print('export all json files to report.csv')
+    
+    print('export %d json files to export.csv' %json_cnt)
 
 if __name__ == '__main__':
     root = Tk()
