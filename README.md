@@ -33,6 +33,7 @@ Please refer to installation.md
 Setting
 -----
 1. ### **Data and directory:**
+   * Delete `DrLiao` symbolic link and add real `DrLiao` folder.
    * Make sure you have the same structure as above-mentioned directory.
    * If you are `DrX`, for example, rather than `DrLiao`. Please have:
         1. Change `DrLiao` folder name into `DrX`.
