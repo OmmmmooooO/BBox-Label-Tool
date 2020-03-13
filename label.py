@@ -320,7 +320,7 @@ class LabelTool():
         fileDir = self.svSourcePath.get()
 
         # set up output label diretory
-        self.outDir = fileDir + '/labels'
+        self.outDir = fileDir + '/DrLiao_labels'
         if not os.path.exists(self.outDir):
             os.mkdir(self.outDir)
         
@@ -461,7 +461,7 @@ class LabelTool():
             str1 = '/'
             return (str1.join(li)) 
         
-        LabelFile = listToString(imagepath_list) + '/labels/' + image_id + '.json'
+        LabelFile = listToString(imagepath_list) + '/DrLiao_labels/' + image_id + '.json'
         if os.path.isfile(LabelFile):
             with open(LabelFile, 'r') as f:
                 data = json.load(f)
