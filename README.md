@@ -36,7 +36,7 @@ Setting
    * Make sure you have the same structure as above-mentioned directory.
    * If you are `DrX`, for example, rather than `DrLiao`. Please have:
         1. Change `DrLiao` folder name into `DrX`.
-        2. Find all `DrLiao` in label.py and replace every of them with `DrX`. You should change **7** places.
+        2. Find all `DrLiao` in `label.py` and replace every of them with `DrX`. You should change **7** places.
 
 2. Run
     ```console
