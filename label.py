@@ -11,7 +11,7 @@ import time
 
 # panel size for init
 PSIZE = 500
-
+NAME = 'DrLiao'
 class LabelTool():
     def __init__(self, master):
         # set up the main frame
@@ -67,40 +67,48 @@ class LabelTool():
         self.etiologyLb_L.pack(anchor=NW)
         self.etiology_L = StringVar()
         self.etiology_L.set(None)
-        self.etiologyBtn_L_1 = Radiobutton(self.BtnPanel_L, text='Osteonecrosis', variable=self.etiology_L, value='0', command = self.setEtiologyBtn_L, state = DISABLED)
+        self.etiologyBtn_L_1 = Radiobutton(self.BtnPanel_L, text='Osteonecrosis', variable=self.etiology_L, value='0', state = DISABLED)
         self.etiologyBtn_L_1.pack(padx=10, pady=4, anchor=NW)
-        self.etiologyBtn_L_2 = Radiobutton(self.BtnPanel_L, text='Avascular necrosis', variable=self.etiology_L, value='1', command = self.setEtiologyBtn_L, state = DISABLED)
+        self.etiologyBtn_L_2 = Radiobutton(self.BtnPanel_L, text='Avascular necrosis', variable=self.etiology_L, value='1', state = DISABLED)
         self.etiologyBtn_L_2.pack(padx=10, pady=4, anchor=NW)
-        self.etiologyBtn_L_3 = Radiobutton(self.BtnPanel_L, text='Osteoarthritis', variable=self.etiology_L, value='2', command = self.setEtiologyBtn_L, state = DISABLED)
+        self.etiologyBtn_L_3 = Radiobutton(self.BtnPanel_L, text='Osteoarthritis', variable=self.etiology_L, value='2', state = DISABLED)
         self.etiologyBtn_L_3.pack(padx=10, pady=4, anchor=NW)
-        self.etiologyBtn_L_4 = Radiobutton(self.BtnPanel_L, text='Femoroacetabular impingement', variable=self.etiology_L, value='3', command = self.setEtiologyBtn_L, state = DISABLED)
+        self.etiologyBtn_L_4 = Radiobutton(self.BtnPanel_L, text='Femoroacetabular impingement', variable=self.etiology_L, value='3', state = DISABLED)
         self.etiologyBtn_L_4.pack(padx=10, pady=4, anchor=NW)
-        self.etiologyBtn_L_5 = Radiobutton(self.BtnPanel_L, text='others', variable=self.etiology_L, value='4', command = self.setEtiologyBtn_L, state = DISABLED)
+        self.etiologyBtn_L_5 = Radiobutton(self.BtnPanel_L, text='others', variable=self.etiology_L, value='4', state = DISABLED)
         self.etiologyBtn_L_5.pack(padx=10, pady=4, anchor=NW)
-        self.etiologyBtn_L_6 = Radiobutton(self.BtnPanel_L, text='Fracture', variable=self.etiology_L, value='5', command = self.setEtiologyBtn_L, state = DISABLED)
+        self.etiologyBtn_L_6 = Radiobutton(self.BtnPanel_L, text='Fracture', variable=self.etiology_L, value='5', state = DISABLED)
         self.etiologyBtn_L_6.pack(padx=10, pady=4, anchor=NW)
-        self.etiologyBtn_L_7 = Radiobutton(self.BtnPanel_L, text='Normal', variable=self.etiology_L, value='6', command = self.setEtiologyBtn_L, state = DISABLED)
+        self.etiologyBtn_L_7 = Radiobutton(self.BtnPanel_L, text='Normal', variable=self.etiology_L, value='6', state = DISABLED)
         self.etiologyBtn_L_7.pack(padx=10, pady=4, anchor=NW)
-        self.etiologyBtn_L_8 = Radiobutton(self.BtnPanel_L, text='Joint or nail', variable=self.etiology_L, value='7', command = self.setEtiologyBtn_L, state = DISABLED)
+        self.etiologyBtn_L_8 = Radiobutton(self.BtnPanel_L, text='Joint or nail', variable=self.etiology_L, value='7', state = DISABLED)
         self.etiologyBtn_L_8.pack(padx=10, pady=4, anchor=NW)
+        self.etiologyBtn_L_9 = Radiobutton(self.BtnPanel_L, text='Osteoarthritis & Avascular necrosis', variable=self.etiology_L, value='8', state = DISABLED)
+        self.etiologyBtn_L_9.pack(padx=10, pady=4, anchor=NW)
 
         # radio button: Grade
         self.gradeLb_L = Label(self.BtnPanel_L, text = 'Grade:')
         self.gradeLb_L.pack(anchor=NW)
         self.grades_L = StringVar()
         self.grades_L.set(None)
-        self.gradeBtn_L_1 = Radiobutton(self.BtnPanel_L, text='1', variable=self.grades_L, value='0', command = self.setGradeBtn_L, state = DISABLED)
+        self.gradeBtn_L_1 = Radiobutton(self.BtnPanel_L, text='1', variable=self.grades_L, value='0', state = DISABLED)
         self.gradeBtn_L_1.pack(padx=10, pady=4, anchor=NW)
-        self.gradeBtn_L_2 = Radiobutton(self.BtnPanel_L, text='2', variable=self.grades_L, value='1', command = self.setGradeBtn_L, state = DISABLED)
+        self.gradeBtn_L_2 = Radiobutton(self.BtnPanel_L, text='2', variable=self.grades_L, value='1', state = DISABLED)
         self.gradeBtn_L_2.pack(padx=10, pady=4, anchor=NW)
-        self.gradeBtn_L_3 = Radiobutton(self.BtnPanel_L, text='3', variable=self.grades_L, value='2', command = self.setGradeBtn_L, state = DISABLED)
+        self.gradeBtn_L_3 = Radiobutton(self.BtnPanel_L, text='3', variable=self.grades_L, value='2', state = DISABLED)
         self.gradeBtn_L_3.pack(padx=10, pady=4, anchor=NW)
-        self.gradeBtn_L_4 = Radiobutton(self.BtnPanel_L, text='4', variable=self.grades_L, value='3', command = self.setGradeBtn_L, state = DISABLED)
+        self.gradeBtn_L_4 = Radiobutton(self.BtnPanel_L, text='4', variable=self.grades_L, value='3', state = DISABLED)
         self.gradeBtn_L_4.pack(padx=10, pady=4, anchor=NW)
-        self.gradeBtn_L_5 = Radiobutton(self.BtnPanel_L, text='5', variable=self.grades_L, value='4', command = self.setGradeBtn_L, state = DISABLED)
+        self.gradeBtn_L_5 = Radiobutton(self.BtnPanel_L, text='5', variable=self.grades_L, value='4', state = DISABLED)
         self.gradeBtn_L_5.pack(padx=10, pady=4, anchor=NW)
-        self.gradeBtn_L_6 = Radiobutton(self.BtnPanel_L, text='Not specified', variable=self.grades_L, value='5', command = self.setGradeBtn_L, state = DISABLED)
+        self.gradeBtn_L_6 = Radiobutton(self.BtnPanel_L, text='Not specified', variable=self.grades_L, value='5', state = DISABLED)
         self.gradeBtn_L_6.pack(padx=10, pady=4, anchor=NW)
+
+        self.commentLb_L = Label(self.BtnPanel_L, text = 'Comments for others or not specified:')
+        self.commentLb_L.pack(anchor=NW)
+        #vcmd = (self.GotoPanel.register(self.validate), '%d', '%i', '%P', '%s', '%S', '%v', '%V', '%W')
+        self.commentText_L = Text(self.BtnPanel_L, height=4, width=30, state=DISABLED)
+        self.commentText_L.pack(anchor=NW)
 
         # canvas for cropped image
         self.subPanel_L = Canvas(self.frame, cursor = 'tcross')
@@ -137,44 +145,52 @@ class LabelTool():
         self.etiologyLb_R.pack(anchor=NW)
         self.etiology_R = StringVar()
         self.etiology_R.set(None)
-        self.etiologyBtn_R_1 = Radiobutton(self.BtnPanel_R, text='Osteonecrosis', variable=self.etiology_R, value='0', command = self.setEtiologyBtn_R, state = DISABLED)
+        self.etiologyBtn_R_1 = Radiobutton(self.BtnPanel_R, text='Osteonecrosis', variable=self.etiology_R, value='0', state = DISABLED)
         self.etiologyBtn_R_1.pack(padx=10, pady=4, anchor=NW)
-        self.etiologyBtn_R_2 = Radiobutton(self.BtnPanel_R, text='Avascular necrosis', variable=self.etiology_R, value='1', command = self.setEtiologyBtn_R, state = DISABLED)
+        self.etiologyBtn_R_2 = Radiobutton(self.BtnPanel_R, text='Avascular necrosis', variable=self.etiology_R, value='1', state = DISABLED)
         self.etiologyBtn_R_2.pack(padx=10, pady=4, anchor=NW)
-        self.etiologyBtn_R_3 = Radiobutton(self.BtnPanel_R, text='Osteoarthritis', variable=self.etiology_R, value='2', command = self.setEtiologyBtn_R, state = DISABLED)
+        self.etiologyBtn_R_3 = Radiobutton(self.BtnPanel_R, text='Osteoarthritis', variable=self.etiology_R, value='2', state = DISABLED)
         self.etiologyBtn_R_3.pack(padx=10, pady=4, anchor=NW)
-        self.etiologyBtn_R_4 = Radiobutton(self.BtnPanel_R, text='Femoroacetabular impingement', variable=self.etiology_R, value='3', command = self.setEtiologyBtn_R, state = DISABLED)
+        self.etiologyBtn_R_4 = Radiobutton(self.BtnPanel_R, text='Femoroacetabular impingement', variable=self.etiology_R, value='3', state = DISABLED)
         self.etiologyBtn_R_4.pack(padx=10, pady=4, anchor=NW)
-        self.etiologyBtn_R_5 = Radiobutton(self.BtnPanel_R, text='others', variable=self.etiology_R, value='4', command = self.setEtiologyBtn_R, state = DISABLED)
+        self.etiologyBtn_R_5 = Radiobutton(self.BtnPanel_R, text='others', variable=self.etiology_R, value='4', state = DISABLED)
         self.etiologyBtn_R_5.pack(padx=10, pady=4, anchor=NW)
-        self.etiologyBtn_R_6 = Radiobutton(self.BtnPanel_R, text='Fracture', variable=self.etiology_R, value='5', command = self.setEtiologyBtn_R, state = DISABLED)
+        self.etiologyBtn_R_6 = Radiobutton(self.BtnPanel_R, text='Fracture', variable=self.etiology_R, value='5', state = DISABLED)
         self.etiologyBtn_R_6.pack(padx=10, pady=4, anchor=NW)
-        self.etiologyBtn_R_7 = Radiobutton(self.BtnPanel_R, text='Normal', variable=self.etiology_R, value='6', command = self.setEtiologyBtn_R, state = DISABLED)
+        self.etiologyBtn_R_7 = Radiobutton(self.BtnPanel_R, text='Normal', variable=self.etiology_R, value='6', state = DISABLED)
         self.etiologyBtn_R_7.pack(padx=10, pady=4, anchor=NW)
-        self.etiologyBtn_R_8 = Radiobutton(self.BtnPanel_R, text='Joint or nail', variable=self.etiology_R, value='7', command = self.setEtiologyBtn_R, state = DISABLED)
+        self.etiologyBtn_R_8 = Radiobutton(self.BtnPanel_R, text='Joint or nail', variable=self.etiology_R, value='7', state = DISABLED)
         self.etiologyBtn_R_8.pack(padx=10, pady=4, anchor=NW)
+        self.etiologyBtn_R_9 = Radiobutton(self.BtnPanel_R, text='Osteoarthritis & Avascular necrosis', variable=self.etiology_R, value='8', state = DISABLED)
+        self.etiologyBtn_R_9.pack(padx=10, pady=4, anchor=NW)
         
         # radio button: Grade
         self.gradeLb_R = Label(self.BtnPanel_R, text = 'Grade:')
         self.gradeLb_R.pack(anchor=NW)
         self.grades_R = StringVar()
         self.grades_R.set(None)
-        self.gradeBtn_R_1 = Radiobutton(self.BtnPanel_R, text='1', variable=self.grades_R, value='0', command = self.setGradeBtn_R, state = DISABLED)
+        self.gradeBtn_R_1 = Radiobutton(self.BtnPanel_R, text='1', variable=self.grades_R, value='0', state = DISABLED)
         self.gradeBtn_R_1.pack(padx=10, pady=4, anchor=NW)
-        self.gradeBtn_R_2 = Radiobutton(self.BtnPanel_R, text='2', variable=self.grades_R, value='1', command = self.setGradeBtn_R, state = DISABLED)
+        self.gradeBtn_R_2 = Radiobutton(self.BtnPanel_R, text='2', variable=self.grades_R, value='1', state = DISABLED)
         self.gradeBtn_R_2.pack(padx=10, pady=4, anchor=NW)
-        self.gradeBtn_R_3 = Radiobutton(self.BtnPanel_R, text='3', variable=self.grades_R, value='2', command = self.setGradeBtn_R, state = DISABLED)
+        self.gradeBtn_R_3 = Radiobutton(self.BtnPanel_R, text='3', variable=self.grades_R, value='2', state = DISABLED)
         self.gradeBtn_R_3.pack(padx=10, pady=4, anchor=NW)
-        self.gradeBtn_R_4 = Radiobutton(self.BtnPanel_R, text='4', variable=self.grades_R, value='3', command = self.setGradeBtn_R, state = DISABLED)
+        self.gradeBtn_R_4 = Radiobutton(self.BtnPanel_R, text='4', variable=self.grades_R, value='3', state = DISABLED)
         self.gradeBtn_R_4.pack(padx=10, pady=4, anchor=NW)
-        self.gradeBtn_R_5 = Radiobutton(self.BtnPanel_R, text='5', variable=self.grades_R, value='4', command = self.setGradeBtn_R, state = DISABLED)
+        self.gradeBtn_R_5 = Radiobutton(self.BtnPanel_R, text='5', variable=self.grades_R, value='4', state = DISABLED)
         self.gradeBtn_R_5.pack(padx=10, pady=4, anchor=NW)
-        self.gradeBtn_R_6 = Radiobutton(self.BtnPanel_R, text='Not specified', variable=self.grades_R, value='5', command = self.setGradeBtn_R, state = DISABLED)
+        self.gradeBtn_R_6 = Radiobutton(self.BtnPanel_R, text='Not specified', variable=self.grades_R, value='5', state = DISABLED)
         self.gradeBtn_R_6.pack(padx=10, pady=4, anchor=NW)
+
+        self.commentLb_R = Label(self.BtnPanel_R, text = 'Comments for others or not specified:')
+        self.commentLb_R.pack(anchor=NW)
+        #vcmd = (self.GotoPanel.register(self.validate), '%d', '%i', '%P', '%s', '%S', '%v', '%V', '%W')
+        self.commentText_R = Text(self.BtnPanel_R, height=4, width=30, state=DISABLED)
+        self.commentText_R.pack(anchor=NW)
         
         # skip button for unknown annotation
         self.skipBtn = Button(self.BtnPanel_R, text = 'Unknown Annotation\n Skip This Image', width = 20, height = 3, command = self.skipImage, fg='red',state = DISABLED)
-        self.skipBtn.pack(padx=10, pady=20, anchor=SW)
+        self.skipBtn.pack(anchor=SW)
 
         # canvas for cropped image
         self.subPanel_R = Canvas(self.frame, cursor = 'tcross')
@@ -204,6 +220,7 @@ class LabelTool():
         self.etiologyBtn_L_6.config(state=NORMAL)
         self.etiologyBtn_L_7.config(state=NORMAL)
         self.etiologyBtn_L_8.config(state=NORMAL)
+        self.etiologyBtn_L_9.config(state=NORMAL)
         
     def setGradeBtn_L(self):
         self.gradeBtn_L_1.config(state=NORMAL)
@@ -222,7 +239,11 @@ class LabelTool():
         self.etiologyBtn_R_6.config(state=NORMAL)
         self.etiologyBtn_R_7.config(state=NORMAL)
         self.etiologyBtn_R_8.config(state=NORMAL)
-        
+        self.etiologyBtn_R_9.config(state=NORMAL)
+    
+    def test(self):
+        print('##########')
+
     def setGradeBtn_R(self):
         self.gradeBtn_R_1.config(state=NORMAL)
         self.gradeBtn_R_2.config(state=NORMAL)
@@ -259,6 +280,8 @@ class LabelTool():
         self.setEtiologyBtn_R()
         self.setGradeBtn_L()
         self.setGradeBtn_R()
+        self.commentText_L.config(state=NORMAL)
+        self.commentText_R.config(state=NORMAL)
 
     def disRadioBtn(self):
         self.etiologyBtn_L_1.config(state=DISABLED)
@@ -269,6 +292,7 @@ class LabelTool():
         self.etiologyBtn_L_6.config(state=DISABLED)
         self.etiologyBtn_L_7.config(state=DISABLED)
         self.etiologyBtn_L_8.config(state=DISABLED)
+        self.etiologyBtn_L_9.config(state=DISABLED)
         self.gradeBtn_L_1.config(state=DISABLED)
         self.gradeBtn_L_2.config(state=DISABLED)
         self.gradeBtn_L_3.config(state=DISABLED)
@@ -283,12 +307,15 @@ class LabelTool():
         self.etiologyBtn_R_6.config(state=DISABLED)
         self.etiologyBtn_R_7.config(state=DISABLED)
         self.etiologyBtn_R_8.config(state=DISABLED)
+        self.etiologyBtn_R_9.config(state=DISABLED)
         self.gradeBtn_R_1.config(state=DISABLED)
         self.gradeBtn_R_2.config(state=DISABLED)
         self.gradeBtn_R_3.config(state=DISABLED)
         self.gradeBtn_R_4.config(state=DISABLED)
         self.gradeBtn_R_5.config(state=DISABLED)
         self.gradeBtn_R_6.config(state=DISABLED)
+        self.commentText_L.config(state=DISABLED)
+        self.commentText_R.config(state=DISABLED)
 
     def disCanvas(self):
         self.mainPanel.delete(ALL)
@@ -320,7 +347,7 @@ class LabelTool():
         fileDir = self.svSourcePath.get()
 
         # set up output label diretory
-        self.outDir = fileDir + '/DrLiao_labels'
+        self.outDir = fileDir + '/' + NAME + '_labels'
         if not os.path.exists(self.outDir):
             os.mkdir(self.outDir)
         
@@ -331,7 +358,7 @@ class LabelTool():
         self.cur = len(labelIDList) + 1
 
         # xls
-        xlsDir = os.path.join(fileDir, 'HumanOA_Annotation_masterTable_0225_2020.xls')
+        xlsDir = os.path.join(fileDir, 'HumanOA_Annotation_masterTable_Sort_0330_2020.xls')
         df = pd.read_excel(open(xlsDir,'rb'), sheet_name=0)
         self.masterTable = df.loc[:,['PatientID', 'MatchId']]
         labelTable = self.masterTable.copy()
@@ -461,7 +488,7 @@ class LabelTool():
             str1 = '/'
             return (str1.join(li)) 
         
-        LabelFile = listToString(imagepath_list) + '/DrLiao_labels/' + image_id + '.json'
+        LabelFile = listToString(imagepath_list) + '/' + NAME + '_labels/' + image_id + '.json'
         if os.path.isfile(LabelFile):
             with open(LabelFile, 'r') as f:
                 data = json.load(f)
@@ -560,11 +587,12 @@ class LabelTool():
         ExitBtn.pack()
 
 def jsontocsv():
-    json_list = glob.glob(os.path.join(os.getcwd(), 'DrLiao', 'DrLiao_labels','*.json'))
+    json_list = glob.glob(os.path.join(os.getcwd(), NAME, NAME+'_labels','*.json'))
     json_cnt  = len(json_list) 
 
     lookupTable_eti = {'None':'Unknown Annotation', '0':'Osteonecrosis', '1':'Avascular necrosis', '2':'Osteoarthritis', \
-                        '3':'Femoroacetabular impingement', '4':'others', '5':'Fracture', '6':'Normal', '7':'Joint or nail'}
+                        '3':'Femoroacetabular impingement', '4':'others', '5':'Fracture', '6':'Normal', '7':'Joint or nail', \
+                        '8':'Osteoarthritis & Avascular necrosis'}
     lookupTable_grade = {'None':'Unknown Annotation', '0':'1', '1':'2', '2':'3', '3':'4', '4':'5', '5':'Not specified'}
     
     outputDF = pd.DataFrame(columns=['PatientID','MatchID','Etiology_right','Grades_right','Etiology_left','Grades_left','time', 'file_path'])
@@ -591,15 +619,15 @@ def jsontocsv():
         
         outputDF = outputDF.append(pd.DataFrame([new_row], columns = outputDF.columns))
 
-    xlsDF       = pd.read_excel(open(os.path.join(os.getcwd(), 'DrLiao', 'HumanOA_Annotation_masterTable_0225_2020.xls'),'rb'), sheet_name=0)
+    xlsDF       = pd.read_excel(open(os.path.join(os.getcwd(), NAME, 'HumanOA_Annotation_masterTable_Sort_0330_2020.xls'),'rb'), sheet_name=0)
     masterTable = xlsDF.loc[:,['PatientID']]
 
     outputDF = outputDF.set_index('PatientID')
     outputDF = outputDF.reindex(index=masterTable['PatientID'])
     outputDF = outputDF.reset_index()
-    outputDF.to_csv("DrLiao_export.csv", index=False)
+    outputDF.to_csv(NAME+'_export.csv', index=False)
     
-    print('export %d json files to DrLiao_export.csv' %json_cnt)
+    print('export {} json files to {}_export.csv'.format(json_cnt, NAME))
 
 if __name__ == '__main__':
     root = Tk()
