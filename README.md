@@ -44,7 +44,7 @@ Setting
     foo@bar:~$ python3 label.py
     ```
     then you can have the following GUI.
-    ![image info](./src/tutorial.png)
+    ![image info](./src/GUI.png)
 
 3. Adjust display resolution until you have the full view of the GUI.
     ![image info](./src/resolution.png)
