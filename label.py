@@ -126,6 +126,11 @@ class LabelTool():
         self.GotoPanel.grid(row = 1, column=0, rowspan = 3, sticky = NW)
         self.gotoLb = Label(self.GotoPanel, text = 'PatientID:')
         self.gotoLb.pack(anchor=NW)
+        
+        ##[tkinter class]
+        # If you want to tie two or more widgets together (ie: display the exact same data), using a StringVar is the right choice.
+        # Most uses of an entry widget don't have that requirement, so you don't need to use a StringVar. 
+        # To remove complexity, just use myEntry.get() instead. -- cited Bryan Oakley's opinion.
         self.gotoText = StringVar(self.GotoPanel)
         self.gotoText.set('000000_01A') 
         vcmd = (self.GotoPanel.register(self.validate), '%d', '%i', '%P', '%s', '%S', '%v', '%V', '%W')
@@ -241,9 +246,6 @@ class LabelTool():
         self.etiologyBtn_R_8.config(state=NORMAL)
         self.etiologyBtn_R_9.config(state=NORMAL)
     
-    def test(self):
-        print('##########')
-
     def setGradeBtn_R(self):
         self.gradeBtn_R_1.config(state=NORMAL)
         self.gradeBtn_R_2.config(state=NORMAL)
@@ -280,6 +282,10 @@ class LabelTool():
         self.setEtiologyBtn_R()
         self.setGradeBtn_L()
         self.setGradeBtn_R()
+    
+    def reCommentText(self):
+        self.commentText_L.delete('1.0', END)
+        self.commentText_R.delete('1.0', END)
         self.commentText_L.config(state=NORMAL)
         self.commentText_R.config(state=NORMAL)
 
@@ -330,6 +336,43 @@ class LabelTool():
         self.prevBtn.config(state=DISABLED)
         self.nextBtn.config(state=DISABLED)
 
+    # [Pop-up window]
+    def genPopupWindow(self, labeltext='skip'):
+        self.popup = Toplevel(self.mainPanel)
+        self.popup.title("Warning")
+        if labeltext == 'skip':
+            text = 'Please write your comments before skipping.'
+        else:
+            text = 'Please write your comments if the etiology is others.'
+
+        self.popupLb = Label(self.popup, text=text, fg="black")
+        self.popupLb.config(font=("Helvetica", 12))
+        self.popupLb.pack(anchor=NW)
+        self.popupBtn = Button(self.popup, text="OK", height=2, width=5, command=self.dePopup)
+        self.popupBtn.pack(anchor=S)
+        self.centerWindow(self.popup)
+
+    def centerWindow(self, toplevel):
+        windowWidth   = toplevel.winfo_reqwidth()
+        windowHeight  = toplevel.winfo_reqheight()
+        positionRight = int(toplevel.winfo_screenwidth()/2 - windowWidth/2)
+        positionDown  = int(toplevel.winfo_screenheight()/2 - windowHeight/2)
+        
+        toplevel.geometry("+{}+{}".format(positionRight, positionDown))
+    
+    def dePopup(self):
+        self.popup.destroy()
+        self.popupLb.destroy()
+        self.popupBtn.destroy()
+
+    def checkComment(self):
+        comment_l = self.commentText_L.get("1.0",'end-1c')
+        comment_r = self.commentText_R.get("1.0",'end-1c')
+        if (len(comment_r) == 0 and len(comment_l) == 0) or (comment_r == 'None' and comment_l == 'None'):
+            return False
+        else:
+            return True
+
     # [Load Image]
     def selectSrcDir(self):
         path = filedialog.askdirectory(title="Select image source folder", initialdir=self.svSourcePath.get())
@@ -347,7 +390,7 @@ class LabelTool():
         fileDir = self.svSourcePath.get()
 
         # set up output label diretory
-        self.outDir = fileDir + '/' + NAME + '_labels'
+        self.outDir = fileDir + '/' + NAME + '_labels_new'
         if not os.path.exists(self.outDir):
             os.mkdir(self.outDir)
         
@@ -385,6 +428,7 @@ class LabelTool():
         
         self.initStateGUI()
         self.reRadioBtn()
+        self.reCommentText()
         self.enBtn()
     
     def loadImage(self):
@@ -488,7 +532,7 @@ class LabelTool():
             str1 = '/'
             return (str1.join(li)) 
         
-        LabelFile = listToString(imagepath_list) + '/' + NAME + '_labels/' + image_id + '.json'
+        LabelFile = listToString(imagepath_list) + '/' + NAME + '_labels_new/' + image_id + '.json'
         if os.path.isfile(LabelFile):
             with open(LabelFile, 'r') as f:
                 data = json.load(f)
@@ -496,6 +540,8 @@ class LabelTool():
                 etiology_R = data[self.imageID]['etiology_r']
                 grades_L = data[self.imageID]['grades_l']
                 grades_R = data[self.imageID]['grades_r']
+                comment_L = data[self.imageID]['comment_l']
+                comment_R = data[self.imageID]['comment_r']
 
                 if (etiology_L == 'None') or (etiology_R == 'None') \
                     or (grades_L == 'None') or (grades_R == 'None'):
@@ -507,12 +553,15 @@ class LabelTool():
                 self.etiology_R.set(etiology_R)
                 self.grades_L.set(grades_L)
                 self.grades_R.set(grades_R)
+                self.commentText_L.insert(END, comment_L)
+                self.commentText_R.insert(END, comment_R)
         else:
             self.statusLb.config(text='Unlabeled')
 
     def prevImage(self):
         if self.cur > 1:
             self.reRadioBtn()
+            self.reCommentText()
             self.cur -= 1
             self.loadImage()
             self.loadLabel()
@@ -520,6 +569,7 @@ class LabelTool():
     def nextImage(self):
         if self.cur < len(self.imgPathList):
             self.reRadioBtn()
+            self.reCommentText()
             self.cur += 1
             self.loadImage()
             self.loadLabel()
@@ -538,19 +588,38 @@ class LabelTool():
             return
         
     def confirmImage(self):
-        if (self.grades_L.get() == 'None') or (self.grades_R.get() == 'None') \
-            or (self.etiology_L.get() == 'None') or (self.etiology_R.get() == 'None'):
+        grade_l = self.grades_L.get()
+        grade_r = self.grades_R.get()
+        eti_l = self.etiology_L.get()
+        eti_r = self.etiology_R.get()
+
+        # incompletely label, (OA, Avas necro, OA+Avas necro with not specified grade)
+        if (grade_l == 'None') or (grade_r == 'None') or \
+            (eti_l == 'None') or (eti_r == 'None') or \
+            (eti_l == '1' and grade_l == '5') or (eti_r == '1' and grade_r == '5') or \
+            (eti_l == '2' and grade_l == '5') or (eti_r == '2' and grade_r == '5') or \
+            (eti_l == '8' and grade_l == '5') or (eti_r == '8' and grade_r == '5'):
+            return
+        
+        # others, no comment
+        if (eti_l == '4' or eti_r == '4') and (not self.checkComment()):
+            self.genPopupWindow(labeltext='others')
             return
         
         self.updateImageDic()
         self.reRadioBtn()
+        self.reCommentText()
         self.loadLabel()
-
+    
     def skipImage(self):
         self.reRadioBtn()
-        self.updateImageDic()
-        self.loadLabel()
-
+        if not self.checkComment():       
+            self.genPopupWindow()
+        else:
+            self.updateImageDic()
+            self.reCommentText()
+            self.loadLabel()
+    
     def updateImageDic(self):
         img_dict = {}
         data = {}
@@ -562,6 +631,20 @@ class LabelTool():
         data['grades_r'] = self.grades_R.get()
         data['etiology_l'] = self.etiology_L.get()
         data['grades_l'] = self.grades_L.get()
+
+        comment_l = self.commentText_L.get("1.0",'end-1c')
+        comment_r = self.commentText_R.get("1.0",'end-1c')
+        
+        if len(comment_r) == 0:
+            data['comment_r'] = 'None'
+        else:
+            data['comment_r'] = comment_r
+        
+        if len(comment_l) == 0:
+            data['comment_l'] = 'None'
+        else:
+            data['comment_l'] = comment_l
+        
         data['time'] = time.strftime("%b/%d/%X", time.localtime()) 
 
         img_dict[self.imageID] = data
@@ -587,7 +670,7 @@ class LabelTool():
         ExitBtn.pack()
 
 def jsontocsv():
-    json_list = glob.glob(os.path.join(os.getcwd(), NAME, NAME+'_labels','*.json'))
+    json_list = glob.glob(os.path.join(os.getcwd(), NAME, NAME+'_labels_new','*.json'))
     json_cnt  = len(json_list) 
 
     lookupTable_eti = {'None':'Unknown Annotation', '0':'Osteonecrosis', '1':'Avascular necrosis', '2':'Osteoarthritis', \
@@ -595,27 +678,29 @@ def jsontocsv():
                         '8':'Osteoarthritis & Avascular necrosis'}
     lookupTable_grade = {'None':'Unknown Annotation', '0':'1', '1':'2', '2':'3', '3':'4', '4':'5', '5':'Not specified'}
     
-    outputDF = pd.DataFrame(columns=['PatientID','MatchID','Etiology_right','Grades_right','Etiology_left','Grades_left','time', 'file_path'])
+    outputDF = pd.DataFrame(columns=['PatientID','MatchID','Etiology_right','Grades_right','Comment_right','Etiology_left','Grades_left','Commment_left','time', 'file_path'])
 
     for i in range(json_cnt):
         df = pd.read_json(json_list[i], orient='values')
         image_id = json_list[i].split('/')[-1][:-5]
         
-        img_id   = df[image_id]['imageid']
-        match_id = df[image_id]['matchid']
-        eti_r    = df[image_id]['etiology_r']
-        grades_r = df[image_id]['grades_r']
-        eti_l    = df[image_id]['etiology_l']
-        grades_l = df[image_id]['grades_l']
-        time     = df[image_id]['time']
-        path     = df[image_id]['path']
+        img_id    = df[image_id]['imageid']
+        match_id  = df[image_id]['matchid']
+        eti_r     = df[image_id]['etiology_r']
+        grades_r  = df[image_id]['grades_r']
+        comment_r = df[image_id]['comment_r']
+        eti_l     = df[image_id]['etiology_l']
+        grades_l  = df[image_id]['grades_l']
+        comment_l = df[image_id]['comment_l']
+        time      = df[image_id]['time']
+        path      = df[image_id]['path']
        
-        eti_r    = lookupTable_eti[eti_r]
-        grades_r = lookupTable_grade[grades_r]
-        eti_l    = lookupTable_eti[eti_l]
-        grades_l = lookupTable_grade[grades_l]
+        eti_r     = lookupTable_eti[eti_r]
+        grades_r  = lookupTable_grade[grades_r]
+        eti_l     = lookupTable_eti[eti_l]
+        grades_l  = lookupTable_grade[grades_l]
 
-        new_row = [img_id, match_id, eti_r, grades_r, eti_l, grades_l, time, path]
+        new_row = [img_id, match_id, eti_r, grades_r, comment_r, eti_l, grades_l, comment_l, time, path]
         
         outputDF = outputDF.append(pd.DataFrame([new_row], columns = outputDF.columns))
 
