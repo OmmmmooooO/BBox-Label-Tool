@@ -342,8 +342,12 @@ class LabelTool():
         self.popup.title("Warning")
         if labeltext == 'skip':
             text = 'Please write your comments before skipping.'
-        else:
+        elif labeltext == 'others':
             text = 'Please write your comments if the etiology is others.'
+        elif labeltext == 'grade':
+            text = 'For OA, Avascular necrosis or OA&Avascular necrosis cases,\nplease specify the grade.'
+        else:
+            text = 'Please press skip button if you want to skip this image.'
 
         self.popupLb = Label(self.popup, text=text, fg="black")
         self.popupLb.config(font=("Helvetica", 12))
@@ -595,12 +599,15 @@ class LabelTool():
 
         # incompletely label, (OA, Avas necro, OA+Avas necro with not specified grade)
         if (grade_l == 'None') or (grade_r == 'None') or \
-            (eti_l == 'None') or (eti_r == 'None') or \
-            (eti_l == '1' and grade_l == '5') or (eti_r == '1' and grade_r == '5') or \
+            (eti_l == 'None') or (eti_r == 'None'):
+            self.genPopupWindow(labeltext='None')
+            return
+        elif (eti_l == '1' and grade_l == '5') or (eti_r == '1' and grade_r == '5') or \
             (eti_l == '2' and grade_l == '5') or (eti_r == '2' and grade_r == '5') or \
             (eti_l == '8' and grade_l == '5') or (eti_r == '8' and grade_r == '5'):
+            self.genPopupWindow(labeltext='grade')
             return
-        
+
         # others, no comment
         if (eti_l == '4' or eti_r == '4') and (not self.checkComment()):
             self.genPopupWindow(labeltext='others')
