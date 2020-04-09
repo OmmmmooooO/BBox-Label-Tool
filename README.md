@@ -14,7 +14,8 @@ hip_label_tool
 |    ├──HumanOA_Annotation_masterTable_Sort_0330_2020.xls
 |    ├──original
 |    ├──crop
-|    └──DrLiao_labels (automatically generated after labeling)
+|    ├──DrLiao_labels (deprecated, automatically generated after labeling)
+|    └──DrLiao_labels_new (automatically generated after labeling)
 |
 ├──DrLiao_export.csv  (automatically generated after labeling)
 |     
@@ -60,6 +61,11 @@ Usage
 
 3. Start labeling and feel free to leave the GUI anytime.
 
+Labeling rules
+-----
+1. Need to write comments before skipping.
+2. Need to write comments for the case whose eiology is others.
+3. Need to specify grade for OA, Avascular necrosis or OA+Avascular necrosis cases.
 
 Original  project address: [BBox-Label-Tool](https://github.com/puzzledqs/BBox-Label-Tool)
 
