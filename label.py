@@ -17,6 +17,7 @@ class LabelTool():
         # set up the main frame
         self.parent = master
         self.parent.title("LabelTool")
+        #masterWindow.geometry("")
         self.frame = Frame(self.parent)
         self.frame.pack(fill=BOTH, expand=1)
         self.parent.resizable(width = FALSE, height = FALSE)
@@ -39,18 +40,18 @@ class LabelTool():
         self.svSourcePath = StringVar()
         self.svSourcePath.set(os.getcwd())
         self.entrySrcDir = Entry(self.frame, textvariable = self.svSourcePath)
-        self.entrySrcDir.grid(row = 0, column = 1, columnspan=4, sticky = W+E)
+        self.entrySrcDir.grid(row = 0, column = 1, columnspan=4, sticky = N+S+W+E)
 
         # >>>>>>> [CENTER PART] <<<<<<<
         # canvas for original image
-        self.mainPanel = Canvas(self.frame, cursor = 'tcross')
-        self.mainPanel.grid(row = 1, column = 1, rowspan = 4, columnspan = 4, sticky = W+E+N+S)
+        self.mainPanel = Canvas(self.frame)
+        self.mainPanel.grid(row = 1, column = 1, rowspan = 4, columnspan = 4, sticky = NSEW)
 
         # >>>>>>> [RIGHT PART] <<<<<<<
         # right side of GUI, left side of patient in x-ray
         # canvas for matched image
-        self.matchimgPanel = Canvas(self.frame, cursor = 'tcross')
-        self.matchimgPanel.grid(row = 1, column = 5, rowspan = 2, columnspan = 2, sticky = W+E+N+S)
+        self.matchimgPanel = Canvas(self.frame)
+        self.matchimgPanel.grid(row = 1, column = 5, rowspan = 2, columnspan = 2, sticky = NW)
         self.matchID = 'MatchID:'
         self.matchIDLb = Label(self.frame, text=self.matchID)
         self.matchIDLb.grid(row = 3, column = 5, sticky = NW)
@@ -107,18 +108,18 @@ class LabelTool():
         self.commentLb_L = Label(self.BtnPanel_L, text = 'Comments for others or not specified:')
         self.commentLb_L.pack(anchor=NW)
         #vcmd = (self.GotoPanel.register(self.validate), '%d', '%i', '%P', '%s', '%S', '%v', '%V', '%W')
-        self.commentText_L = Text(self.BtnPanel_L, height=4, width=30, state=DISABLED)
+        self.commentText_L = Text(self.BtnPanel_L, height=4, width=30, state=DISABLED, background='gray90')
         self.commentText_L.pack(anchor=NW)
 
         # canvas for cropped image
-        self.subPanel_L = Canvas(self.frame, cursor = 'tcross')
-        self.subPanel_L.grid(row = 5, column = 3, rowspan = 2, columnspan = 2, sticky = W)
+        self.subPanel_L = Canvas(self.frame)
+        self.subPanel_L.grid(row = 5, column = 3, rowspan = 2, columnspan = 2, sticky = NE)
 
         # control button
-        self.clrBtn = Button(self.BtnPanel_L, text = 'Clear All', width = 20, height = 2, command = self.reRadioBtn, state = DISABLED)
-        self.clrBtn.pack()
-        self.doneBtn = Button(self.BtnPanel_L, text = 'Save annotation', width = 20, height = 5, command = self.confirmImage, fg='red', state = DISABLED)
-        self.doneBtn.pack()
+        self.clrBtn = Button(self.BtnPanel_L, text = 'Clear All', width = 20, height = 1, command = self.reRadioBtn, state = DISABLED)
+        self.clrBtn.pack(pady=4, anchor=NW)
+        self.doneBtn = Button(self.BtnPanel_L, text = 'Save annotation', width = 20, height = 2, command = self.confirmImage, fg='red', state = DISABLED)
+        self.doneBtn.pack(anchor=NW)
 
         # >>>>>>> [LEFT PART] <<<<<<<
         # left side of GUI, right side of patient in x-ray
@@ -190,30 +191,30 @@ class LabelTool():
         self.commentLb_R = Label(self.BtnPanel_R, text = 'Comments for others or not specified:')
         self.commentLb_R.pack(anchor=NW)
         #vcmd = (self.GotoPanel.register(self.validate), '%d', '%i', '%P', '%s', '%S', '%v', '%V', '%W')
-        self.commentText_R = Text(self.BtnPanel_R, height=4, width=30, state=DISABLED)
+        self.commentText_R = Text(self.BtnPanel_R, height=4, width=30, state=DISABLED, background='gray90')
         self.commentText_R.pack(anchor=NW)
         
         # skip button for unknown annotation
-        self.skipBtn = Button(self.BtnPanel_R, text = 'Unknown Annotation\n Skip This Image', width = 20, height = 3, command = self.skipImage, fg='red',state = DISABLED)
-        self.skipBtn.pack(anchor=SW)
+        self.skipBtn = Button(self.BtnPanel_R, text = 'Unknown Annotation\n Skip This Image', width = 20, height = 2, command = self.skipImage, fg='red',state = DISABLED)
+        self.skipBtn.pack(anchor=NW)
 
         # canvas for cropped image
-        self.subPanel_R = Canvas(self.frame, cursor = 'tcross')
-        self.subPanel_R.grid(row = 5, column = 1, rowspan = 2, columnspan = 2, sticky = E)
+        self.subPanel_R = Canvas(self.frame)
+        self.subPanel_R.grid(row = 5, column = 1, rowspan = 2, columnspan = 2, sticky = NW)
         
         # >>>>>>> [BOTTOM PART] <<<<<<<
         # control panel for image navigation
         self.progLb = Label(self.frame, text = "Progress:     /    ")
-        self.progLb.grid(row = 8, column = 0, sticky = SW)
+        self.progLb.grid(row = 8, column = 0, sticky = NW)
         self.filenameLabel = Label(self.frame, text = "PatientID:")
-        self.filenameLabel.grid(row = 8, column = 1, sticky = SW)
+        self.filenameLabel.grid(row = 8, column = 1, sticky = NW)
         self.filenameLabel.config(font=("Helvetica", 16))
         self.prevBtn = Button(self.frame, text='<< Prev', width = 10, command = self.prevImage, state = DISABLED)
-        self.prevBtn.grid(row = 8, column = 2, sticky = SW)
+        self.prevBtn.grid(row = 8, column = 2, sticky = NW)
         self.nextBtn = Button(self.frame, text='Next >>', width = 10, command = self.nextImage, state = DISABLED)
-        self.nextBtn.grid(row = 8, column = 3, sticky = SW)
+        self.nextBtn.grid(row = 8, column = 3, sticky = NW)
         self.statusLb = Label(self.frame, text = 'Unlabeled')
-        self.statusLb.grid(row = 8, column = 4, sticky = SW)
+        self.statusLb.grid(row = 8, column = 4, sticky = NW)
 
     # [Button Function]   
     def setEtiologyBtn_L(self):
@@ -341,16 +342,16 @@ class LabelTool():
         self.popup = Toplevel(self.mainPanel)
         self.popup.title("Warning")
         if labeltext == 'skip':
-            text = 'Please write your comments before skipping.'
+            text = '\nPlease write your comments before skipping.\n'
         elif labeltext == 'others':
-            text = 'Please write your comments if the etiology is others.'
+            text = '\nPlease write your comments if the etiology is others.\n'
         elif labeltext == 'grade':
-            text = 'For OA, Avascular necrosis or OA&Avascular necrosis cases,\nplease specify the grade.'
+            text = '\nFor OA, Avascular necrosis or OA&Avascular necrosis cases,\nplease specify the grade.\n'
         else:
-            text = 'Please press skip button if you want to skip this image.'
+            text = '\nPlease fill out all sections or press skip button.\n'
 
-        self.popupLb = Label(self.popup, text=text, fg="black")
-        self.popupLb.config(font=("Helvetica", 12))
+        self.popupLb = Label(self.popup, text=text, fg="red", font='Helvetica 18 bold')
+        #self.popupLb.config(font=("Helvetica", 16))
         self.popupLb.pack(anchor=NW)
         self.popupBtn = Button(self.popup, text="OK", height=2, width=5, command=self.dePopup)
         self.popupBtn.pack(anchor=S)
@@ -462,10 +463,10 @@ class LabelTool():
 
         if size[0] >= size[1]:
             self.factor = long_side / size[0]
-            self.img = self.img.resize((500, int(size[1]*self.factor)))
+            self.img = self.img.resize((long_side, int(size[1]*self.factor)))
         else:
             self.factor = long_side / size[1]
-            self.img = self.img.resize((int(size[0]*self.factor), 500))
+            self.img = self.img.resize((int(size[0]*self.factor), long_side))
 
         self.tkimg = ImageTk.PhotoImage(self.img)
         self.mainPanel.config(width = max(self.tkimg.width(), PSIZE), height = max(self.tkimg.height(), PSIZE))
@@ -484,19 +485,20 @@ class LabelTool():
         subimagepath_L = listToString(imagepath_list) + '/crop/' + _image_id + '_R.jpg'
         subimagepath_R = subimagepath_L[:-5] + 'L.jpg'
 
+        long_side_sub = 250
         if (os.path.isfile(subimagepath_R) and os.path.isfile(subimagepath_L)):
             with Image.open(subimagepath_L) as img_L:
                 self.img_L = img_L
-                self.img_L = self.img_L.resize((300, 300))
+                self.img_L = self.img_L.resize((long_side_sub, long_side_sub))
                 self.tkimg_L = ImageTk.PhotoImage(self.img_L)
-                self.subPanel_L.config(width = 300, height = 300)
+                self.subPanel_L.config(width = long_side_sub, height = long_side_sub)
                 self.subPanel_L.create_image(0, 0, image = self.tkimg_L, anchor=NW)
             
             with Image.open(subimagepath_R) as img_R:
                 self.img_R = img_R
-                self.img_R = self.img_R.resize((300, 300))
+                self.img_R = self.img_R.resize((long_side_sub, long_side_sub))
                 self.tkimg_R = ImageTk.PhotoImage(self.img_R)
-                self.subPanel_R.config(width = 300, height = 300)
+                self.subPanel_R.config(width = long_side_sub, height = long_side_sub)
                 self.subPanel_R.create_image(0, 0, image = self.tkimg_R, anchor=NW)
         else:
             self.subPanel_L.delete(ALL)
@@ -506,17 +508,17 @@ class LabelTool():
             with Image.open(matchimgpath) as matchImg:
                 self.matchImg = matchImg
                 size = self.matchImg.size
-                long_side = 300
+                long_side = 250
 
                 if size[0] >= size[1]:
                     factor = long_side / size[0]
-                    self.matchImg = self.matchImg.resize((300, int(size[1]*factor)))
+                    self.matchImg = self.matchImg.resize((long_side, int(size[1]*factor)))
                 else:
                     factor = long_side / size[1]
-                    self.matchImg = self.matchImg.resize((int(size[0]*factor), 300))
+                    self.matchImg = self.matchImg.resize((int(size[0]*factor), long_side))
                 self.tkimg_match = ImageTk.PhotoImage(self.matchImg)
 
-                self.matchimgPanel.config(width = 300, height = 300)            
+                self.matchimgPanel.config(width = long_side, height = long_side)            
                 self.matchimgPanel.create_image(0, 0, image = self.tkimg_match, anchor=NW)
         else:
             self.matchimgPanel.delete(ALL)
@@ -668,7 +670,7 @@ class LabelTool():
             self.labelFinished()
 
     def labelFinished(self):
-        NORM_FONT = ("Helvetica", 10)
+        NORM_FONT = ("Helvetica", 16)
         FinishWindow = Toplevel(self.parent)
         FinishWindow.geometry("%dx%d" % (400, 200))
         FinishLabel = Label(FinishWindow, text="Finish All Images.", font=NORM_FONT)
