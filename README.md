@@ -64,8 +64,8 @@ Usage
 Labeling rules
 -----
 1. Need to write comments before skipping.
-2. Need to write comments for the case whose eiology is others.
-3. Need to specify grade for OA, Avascular necrosis or OA+Avascular necrosis cases.
+2. Need to write comments in the case whose etiology is others.
+3. Need to specify grade in OA, Avascular necrosis or OA+Avascular necrosis cases.
 
 Original  project address: [BBox-Label-Tool](https://github.com/puzzledqs/BBox-Label-Tool)
 
