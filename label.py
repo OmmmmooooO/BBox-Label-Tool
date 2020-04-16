@@ -587,6 +587,8 @@ class LabelTool():
             return
         elif gotoImageID in self.imgIDList:
             self.initLoadImg()
+            self.reRadioBtn()
+            self.reCommentText()
             self.cur = self.imgIDList.index(gotoImageID) + 1
             self.loadImage()
             self.loadLabel()
